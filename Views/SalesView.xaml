@@ -231,51 +231,6 @@
                 </StackPanel>
             </Border>
 
-            <!-- Customer Section -->
-            <Border DockPanel.Dock="Top" Style="{StaticResource Card}" Margin="0 0 0 12" Background="{StaticResource BrushBgDark}">
-                <StackPanel>
-                    <Label Content="MIJOZ VA CHEGIRMA" FontSize="11" Foreground="{StaticResource BrushTextSec}" Margin="0 0 0 8"/>
-                    
-                    <Grid Visibility="{Binding CurrentCustomer, Converter={StaticResource NullVis}, ConverterParameter=Inverse}">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBox Grid.Column="0"
-                                 Style="{StaticResource TxtBox}"
-                                 Text="{Binding CustomerPhone, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="Telefon raqamini kiriting (masalan 998901234567)"
-                                 Padding="10 8"/>
-                        <Button Grid.Column="1" Content="Qidirish"
-                                Style="{StaticResource BtnBase}"
-                                Padding="12 8" FontSize="12" Margin="8 0 0 0"
-                                Command="{Binding FindCustomerCommand}"/>
-                    </Grid>
-
-                    <Border Visibility="{Binding CurrentCustomer, Converter={StaticResource NullVis}}"
-                            Background="#1A27ae60" BorderBrush="{StaticResource BrushGreen}" BorderThickness="1"
-                            CornerRadius="6" Padding="12 8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*"/>
-                                <ColumnDefinition Width="Auto"/>
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding CurrentCustomer.Name}" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}"/>
-                                <TextBlock Text="{Binding CurrentCustomer.DiscountPercent, StringFormat='Chegirma: {0}%'}" FontSize="12" Foreground="{StaticResource BrushGreen}" Margin="0 2 0 0"/>
-                            </StackPanel>
-                            <Button Grid.Column="1" Content="❌"
-                                    Background="Transparent" BorderThickness="0"
-                                    Foreground="{StaticResource BrushRed}"
-                                    Cursor="Hand" FontSize="12"
-                                    VerticalAlignment="Center"
-                                    Command="{Binding ClearCustomerCommand}"
-                                    ToolTip="Mijozni bekor qilish"/>
-                        </Grid>
-                    </Border>
-                </StackPanel>
-            </Border>
-
             <!-- Cart items -->
             <Border DockPanel.Dock="Top" Style="{StaticResource Card}">
                 <DockPanel>
@@ -390,13 +345,6 @@
                                            Foreground="{StaticResource BrushTextPrimary}"
                                            FontSize="14"/>
                             </Grid>
-                            <Grid Margin="0 4">
-                                <TextBlock Text="Chegirma:" Foreground="{StaticResource BrushTextSec}"/>
-                                <TextBlock Text="{Binding Discount, StringFormat='−{0:N0}'}"
-                                           HorizontalAlignment="Right"
-                                           Foreground="{StaticResource BrushOrange}"
-                                           FontSize="14"/>
-                            </Grid>
                             <Separator/>
                             <Grid Margin="0 8">
                                 <TextBlock Text="JAMI TO'LOV:" FontWeight="Bold"
@@ -409,12 +357,6 @@
                             </Grid>
                         </StackPanel>
                     </Border>
-
-                    <!-- Discount -->
-                    <Label Content="CHEGIRMA (so'm)"/>
-                    <TextBox Style="{StaticResource TxtBox}"
-                             Text="{Binding Discount, UpdateSourceTrigger=PropertyChanged}"
-                             Margin="0 0 0 12"/>
 
                     <!-- Payment method -->
                     <Label Content="TO'LOV TURI"/>
