@@ -385,11 +385,13 @@
                                  Text="{Binding AmountPaid, UpdateSourceTrigger=PropertyChanged}"
                                  FontSize="18" FontWeight="Bold"/>
                         <Button Grid.Column="1"
-                                Content="= Aniq"
+                                Content="="
                                 Style="{StaticResource BtnBase}"
                                 Margin="8 0 0 0"
-                                Padding="12 8"
-                                Command="{Binding SetAmountExactCommand}"/>
+                                Width="46"
+                                FontSize="18" FontWeight="Bold"
+                                Command="{Binding SetAmountExactCommand}"
+                                ToolTip="Jami summani aynan o'zini to'lash (Aniq)"/>
                     </Grid>
 
                     <!-- Quick amount buttons -->
