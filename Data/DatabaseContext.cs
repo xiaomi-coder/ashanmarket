@@ -87,6 +87,12 @@ CREATE TABLE IF NOT EXISTS Sales (
     Change        REAL    NOT NULL DEFAULT 0,
     PaymentMethod TEXT    NOT NULL DEFAULT 'Naqd',
     Status        TEXT    NOT NULL DEFAULT 'Completed',
+    IsSynced      INTEGER NOT NULL DEFAULT 0,
+    CreatedAt     TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
+    FOREIGN KEY (UserId) REFERENCES Users(Id)
+);
+
+    IsSynced      INTEGER NOT NULL DEFAULT 0,
     CreatedAt     TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
     FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
@@ -127,6 +133,18 @@ CREATE TABLE IF NOT EXISTS Customers (
     CreatedAt       TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
+CREATE TABLE IF NOT EXISTS Expenses (
+    Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    Amount      REAL    NOT NULL,
+    Reason      TEXT    NOT NULL,
+    CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
+    UserId      INTEGER NOT NULL,
+    CashierName TEXT    NOT NULL DEFAULT '',
+    ShiftId     INTEGER,
+    FOREIGN KEY (UserId) REFERENCES Users(Id),
+    FOREIGN KEY (ShiftId) REFERENCES Shifts(Id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_products_barcode ON Products(Barcode);
 CREATE INDEX IF NOT EXISTS idx_products_name    ON Products(Name);
 CREATE INDEX IF NOT EXISTS idx_sales_date       ON Sales(CreatedAt);
@@ -137,6 +155,17 @@ CREATE INDEX IF NOT EXISTS idx_customers_phone  ON Customers(Phone);
         using var cmd = conn.CreateCommand();
         cmd.CommandText = schema;
         cmd.ExecuteNonQuery();
+
+        try
+        {
+            using var updateCmd = conn.CreateCommand();
+            updateCmd.CommandText = "ALTER TABLE Sales ADD COLUMN IsSynced INTEGER NOT NULL DEFAULT 0;";
+            updateCmd.ExecuteNonQuery();
+        }
+        catch
+        {
+            // Column already exists
+        }
     }
 
     public string GetDatabasePath()

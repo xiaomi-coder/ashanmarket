@@ -150,6 +150,10 @@ public class MainViewModel : BaseViewModel
     public SalesViewModel              SalesVM     { get; }
     public ProductManagementViewModel  ProductsVM  { get; }
     public ReportsViewModel            ReportsVM   { get; }
+    public CategoryManagementViewModel CategoriesVM { get; }
+    public ReturnsViewModel            ReturnsVM   { get; }
+    public ExpensesViewModel           ExpensesVM  { get; }
+    public UserManagementViewModel     UsersVM     { get; }
 
     private BaseViewModel _currentView;
     public BaseViewModel CurrentView
@@ -177,20 +181,34 @@ public class MainViewModel : BaseViewModel
     public ICommand NavigateSalesCommand    { get; }
     public ICommand NavigateProductsCommand { get; }
     public ICommand NavigateReportsCommand  { get; }
+    public ICommand NavigateCategoriesCommand { get; }
+    public ICommand NavigateReturnsCommand    { get; }
+    public ICommand NavigateExpensesCommand   { get; }
+    public ICommand NavigateUsersCommand      { get; }
     public ICommand BackupCommand           { get; }
     public ICommand ManageShiftCommand      { get; }
+    public ICommand SyncCommand             { get; }
 
     public MainViewModel(
         SalesViewModel salesVM,
         ProductManagementViewModel productsVM,
         ReportsViewModel reportsVM,
+        CategoryManagementViewModel categoriesVM,
+        ReturnsViewModel returnsVM,
+        ExpensesViewModel expensesVM,
+        UserManagementViewModel usersVM,
         IProductService productService,
         IAuthService authService,
-        IShiftService shiftService)
+        IShiftService shiftService,
+        ISyncService syncService)
     {
         SalesVM          = salesVM;
         ProductsVM       = productsVM;
         ReportsVM        = reportsVM;
+        CategoriesVM     = categoriesVM;
+        ReturnsVM        = returnsVM;
+        ExpensesVM       = expensesVM;
+        UsersVM          = usersVM;
         _productService  = productService;
         _authService     = authService;
         _shiftService    = shiftService;
@@ -199,8 +217,17 @@ public class MainViewModel : BaseViewModel
         NavigateSalesCommand    = new RelayCommand(() => CurrentView = SalesVM);
         NavigateProductsCommand = new RelayCommand(() => { CurrentView = ProductsVM; _ = ProductsVM.LoadProductsAsync(); });
         NavigateReportsCommand  = new RelayCommand(() => { CurrentView = ReportsVM; _ = ReportsVM.LoadReportAsync(); });
+        NavigateCategoriesCommand = new RelayCommand(() => CurrentView = CategoriesVM);
+        NavigateReturnsCommand  = new RelayCommand(() => CurrentView = ReturnsVM);
+        NavigateExpensesCommand = new RelayCommand(() => { CurrentView = ExpensesVM; _ = ExpensesVM.LoadExpensesAsync(); });
+        NavigateUsersCommand    = new RelayCommand(() => { CurrentView = UsersVM; _ = UsersVM.LoadUsersAsync(); });
         BackupCommand           = new AsyncRelayCommand(BackupDatabaseAsync);
         ManageShiftCommand      = new AsyncRelayCommand(ManageShiftAsync);
+        SyncCommand             = new AsyncRelayCommand(async () => {
+            var success = await syncService.SyncSalesAsync();
+            if (success) 
+                System.Windows.MessageBox.Show("Sinxronizatsiya muvaffaqiyatli yakunlandi!", "Sync", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
+        });
     }
 
     public async Task InitializeAsync()

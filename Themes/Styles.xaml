@@ -9,6 +9,7 @@
     <conv:StatusColorConverter x:Key="StatusColor"/>
     <conv:BoolToStringConverter x:Key="BoolToStr"/>
     <conv:NullToVisibilityConverter x:Key="NullVis"/>
+    <conv:StringToBrushConverter x:Key="StrToBrush"/>
 
     <!-- ═══ BASE BUTTON ═══════════════════════════════════════════════════ -->
     <Style x:Key="BtnBase" TargetType="Button">

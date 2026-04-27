@@ -18,8 +18,20 @@
         <DataTemplate DataType="{x:Type vm:ProductManagementViewModel}">
             <views:ProductManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:CategoryManagementViewModel}">
+            <views:CategoryManagementView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
             <views:ReportsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReturnsViewModel}">
+            <views:ReturnsView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ExpensesViewModel}">
+            <views:ExpensesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:UserManagementViewModel}">
+            <views:UserManagementView/>
         </DataTemplate>
     </Window.Resources>
 
@@ -70,6 +82,15 @@
                             Foreground="{StaticResource BrushTextSec}"
                             Background="Transparent"
                             Command="{Binding BackupCommand}"/>
+
+                    <Button Style="{StaticResource BtnBase}"
+                            Content="🔄  Sinxronizatsiya (Web)"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="16 10"
+                            Foreground="{StaticResource BrushTextSec}"
+                            Background="Transparent"
+                            Command="{Binding SyncCommand}"/>
                 </StackPanel>
 
                 <!-- Navigation -->
@@ -95,6 +116,37 @@
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
                             Command="{Binding NavigateProductsCommand}"
+                            Margin="0 2"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="📂   Kategoriyalar"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateCategoriesCommand}"
+                            Margin="0 2"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="↩   Vozvrat (Qaytarish)"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateReturnsCommand}"
+                            Foreground="{StaticResource BrushRed}"
+                            Margin="0 2"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="💸   Xarajatlar"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateExpensesCommand}"
+                            Margin="0 2"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="👥   Xodimlar"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateUsersCommand}"
                             Margin="0 2"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
 

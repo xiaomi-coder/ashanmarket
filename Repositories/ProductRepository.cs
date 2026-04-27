@@ -17,6 +17,8 @@ public interface IProductRepository
     Task<bool> UpdateStockAsync(int productId, int quantityChange);
     Task<IEnumerable<Category>> GetCategoriesAsync();
     Task<int> AddCategoryAsync(Category category);
+    Task<bool> UpdateCategoryAsync(Category category);
+    Task<bool> DeleteCategoryAsync(int id);
 }
 
 public class ProductRepository : IProductRepository
@@ -134,5 +136,24 @@ public class ProductRepository : IProductRepository
             INSERT INTO Categories (Name, Description, Color) 
             VALUES (@Name, @Description, @Color);
             SELECT last_insert_rowid();", category);
+    }
+
+    public async Task<bool> UpdateCategoryAsync(Category category)
+    {
+        using var conn = _db.GetConnection();
+        var rows = await conn.ExecuteAsync(@"
+            UPDATE Categories 
+            SET Name=@Name, Description=@Description, Color=@Color
+            WHERE Id=@Id", category);
+        return rows > 0;
+    }
+
+    public async Task<bool> DeleteCategoryAsync(int id)
+    {
+        using var conn = _db.GetConnection();
+        // Set IsActive to 0 instead of hard delete
+        var rows = await conn.ExecuteAsync(
+            "UPDATE Categories SET IsActive=0 WHERE Id=@Id", new { Id = id });
+        return rows > 0;
     }
 }

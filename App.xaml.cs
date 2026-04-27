@@ -71,6 +71,7 @@ public partial class App : Application
         services.AddSingleton<IUserRepository, UserRepository>();
         services.AddSingleton<IShiftRepository, ShiftRepository>();
         services.AddSingleton<ICustomerRepository, CustomerRepository>();
+        services.AddSingleton<IExpenseRepository, ExpenseRepository>();
 
         // Services
         services.AddSingleton<IProductService, ProductService>();
@@ -80,12 +81,17 @@ public partial class App : Application
         services.AddSingleton<IShiftService, ShiftService>();
         services.AddSingleton<ICustomerService, CustomerService>();
         services.AddSingleton<IBarcodePrinterService, BarcodePrinterService>();
+        services.AddSingleton<ISyncService, SyncService>();
 
         // ViewModels
         services.AddTransient<LoginViewModel>();
         services.AddSingleton<SalesViewModel>();
         services.AddSingleton<ProductManagementViewModel>();
         services.AddSingleton<ReportsViewModel>();
+        services.AddSingleton<CategoryManagementViewModel>();
+        services.AddSingleton<ReturnsViewModel>();
+        services.AddSingleton<ExpensesViewModel>();
+        services.AddSingleton<UserManagementViewModel>();
         services.AddSingleton<MainViewModel>();
     }
 }

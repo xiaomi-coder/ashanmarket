@@ -53,6 +53,9 @@ public interface IProductService
     Task<bool> DeleteProductAsync(int id);
     Task<bool> ImportFromCsvAsync(string filePath);
     Task<IEnumerable<Category>> GetCategoriesAsync();
+    Task<int> AddCategoryAsync(Category category);
+    Task<bool> UpdateCategoryAsync(Category category);
+    Task<bool> DeleteCategoryAsync(int id);
 }
 
 public class ProductService : IProductService
@@ -66,6 +69,9 @@ public class ProductService : IProductService
     public Task<IEnumerable<Product>> GetAllAsync() => _repo.GetAllAsync();
     public Task<IEnumerable<Product>> GetLowStockAsync() => _repo.GetLowStockAsync();
     public Task<IEnumerable<Category>> GetCategoriesAsync() => _repo.GetCategoriesAsync();
+    public Task<int> AddCategoryAsync(Category category) => _repo.AddCategoryAsync(category);
+    public Task<bool> UpdateCategoryAsync(Category category) => _repo.UpdateCategoryAsync(category);
+    public Task<bool> DeleteCategoryAsync(int id) => _repo.DeleteCategoryAsync(id);
 
     public async Task<int> AddProductAsync(Product product)
     {
@@ -129,11 +135,13 @@ public class ShiftService : IShiftService
 {
     private readonly IShiftRepository _shiftRepo;
     private readonly ISaleRepository _saleRepo;
+    private readonly IExpenseRepository _expenseRepo;
 
-    public ShiftService(IShiftRepository shiftRepo, ISaleRepository saleRepo)
+    public ShiftService(IShiftRepository shiftRepo, ISaleRepository saleRepo, IExpenseRepository expenseRepo)
     {
         _shiftRepo = shiftRepo;
         _saleRepo = saleRepo;
+        _expenseRepo = expenseRepo;
     }
 
     public Task<Shift?> GetOpenShiftAsync() => _shiftRepo.GetOpenShiftAsync();
@@ -168,11 +176,14 @@ public class ShiftService : IShiftService
         // Oson yo'li: SaleRepo orqali CashierId va CreatedAt > OpenedAt bilan savdolarni olish
         var sales = await _saleRepo.GetSalesByCashierAndDateAsync(shift.CashierId, shift.OpenedAt, DateTime.Now);
         
-        // Jami naqd pul tushumi (Faqat 'Naqd' to'lov turi bo'yicha yoki umumiy?)
-        // Odatda kassa qoldig'iga faqat Naqd pul qo'shiladi. 
+        // Jami naqd pul tushumi
         var cashSales = sales.Where(s => s.PaymentMethod == "Naqd").Sum(s => s.AmountPaid - s.Change);
         
-        shift.ExpectedBalance = shift.StartingBalance + cashSales;
+        // Smena davridagi xarajatlar
+        var expenses = await _expenseRepo.GetExpensesByShiftAsync(shift.Id);
+        var totalExpenses = expenses.Sum(e => e.Amount);
+
+        shift.ExpectedBalance = shift.StartingBalance + cashSales - totalExpenses;
         shift.ActualBalance = actualBalance;
         shift.ClosedAt = DateTime.Now;
         shift.Status = "Closed";

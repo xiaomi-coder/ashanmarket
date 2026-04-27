@@ -1,0 +1,85 @@
+<UserControl x:Class="SupermarketPOS.Views.ExpensesView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="{StaticResource BrushBgDark}">
+
+    <Grid Margin="16">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Form for adding expense -->
+        <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0 0 16 0" VerticalAlignment="Top">
+            <StackPanel>
+                <TextBlock Text="Kassadan chiqim" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0 0 0 16"/>
+
+                <Label Content="SUMMA"/>
+                <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewAmount, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"/>
+
+                <Label Content="XARAJAT SABABI (Izoh)"/>
+                <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewReason, UpdateSourceTrigger=PropertyChanged}" 
+                         Height="80" TextWrapping="Wrap" AcceptsReturn="True" Margin="0 0 0 16"/>
+
+                <Button Style="{StaticResource BtnAccent}" Content="Xarajatni saqlash" Command="{Binding AddExpenseCommand}" Height="40"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Expenses List -->
+        <Border Grid.Column="1" Style="{StaticResource Card}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 16" HorizontalAlignment="SpaceBetween">
+                    <TextBlock Text="Smenadagi xarajatlar" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}"/>
+                    <Button Content="Yangilash" Style="{StaticResource BtnBase}" Command="{Binding LoadExpensesCommand}" Padding="16 4"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="None"
+                          BorderThickness="0" Background="Transparent" RowBackground="Transparent"
+                          Foreground="{StaticResource BrushTextPrimary}">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource BrushBgMid}"/>
+                            <Setter Property="Foreground" Value="{StaticResource BrushTextSec}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="10"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+                        </Style>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Sana" Binding="{Binding CreatedAt, StringFormat={}{0:HH:mm}}" Width="80"/>
+                        <DataGridTextColumn Header="Sabab" Binding="{Binding Reason}" Width="*"/>
+                        <DataGridTextColumn Header="Summa" Binding="{Binding Amount, StringFormat={}{0:N0} som}" Width="150" FontWeight="Bold">
+                            <DataGridTextColumn.ElementStyle>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Foreground" Value="{StaticResource BrushRed}"/>
+                                </Style>
+                            </DataGridTextColumn.ElementStyle>
+                        </DataGridTextColumn>
+                        <DataGridTextColumn Header="Kassir" Binding="{Binding CashierName}" Width="120"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Border Grid.Row="2" Background="{StaticResource BrushBgMid}" CornerRadius="4" Padding="16" Margin="0 16 0 0">
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                        <TextBlock Text="Jami chiqim:" FontSize="16" Foreground="{StaticResource BrushTextSec}" VerticalAlignment="Center" Margin="0 0 16 0"/>
+                        <TextBlock Text="{Binding TotalExpensesToday, StringFormat={}{0:N0} som}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource BrushRed}"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -77,3 +77,57 @@ public class NullToVisibilityConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         => throw new NotImplementedException();
 }
+
+public class StringToBrushConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is string s && !string.IsNullOrWhiteSpace(s))
+        {
+            try
+            {
+                var color = (Color)ColorConverter.ConvertFromString(s);
+                return new SolidColorBrush(color);
+            }
+            catch
+            {
+                // Return default color if invalid
+            }
+        }
+        return new SolidColorBrush(Color.FromRgb(33, 150, 243)); // Default blue
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is SolidColorBrush brush)
+        {
+            return brush.Color.ToString();
+        }
+        return "#2196F3";
+    }
+}
+
+public class BoolToColorConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isTrue && isTrue)
+        {
+            return new SolidColorBrush(Color.FromRgb(76, 175, 80)); // Green
+        }
+        return new SolidColorBrush(Color.FromRgb(244, 67, 54)); // Red
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}
+
+public class BoolToStatusTextConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+    {
+        if (value is bool isTrue && isTrue) return "Faol";
+        return "Bloklangan";
+    }
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) => throw new NotImplementedException();
+}

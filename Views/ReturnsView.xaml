@@ -1,0 +1,90 @@
+<UserControl x:Class="SupermarketPOS.Views.ReturnsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:converters="clr-namespace:SupermarketPOS.Converters"
+             Background="{StaticResource BrushBgDark}">
+
+    <UserControl.Resources>
+        <converters:NullToVisibilityConverter x:Key="NullVis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Qidiruv paneli -->
+        <Border Grid.Row="0" Style="{StaticResource Card}" Margin="0 0 0 16">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Vozvrat (Qaytarish)" FontSize="20" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" VerticalAlignment="Center" Margin="0 0 24 0"/>
+                <Label Content="CHEK RAQAMI:" VerticalAlignment="Center" Margin="0 0 8 0"/>
+                <TextBox Style="{StaticResource TxtBox}" Width="300" Text="{Binding SearchSaleNumber, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center"/>
+                <Button Content="Qidirish" Style="{StaticResource BtnAccent}" Command="{Binding SearchCommand}" Margin="8 0 0 0" Width="100"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Topilgan chek ma'lumotlari -->
+        <Border Grid.Row="1" Style="{StaticResource Card}" Visibility="{Binding FoundSale, Converter={StaticResource NullVis}}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 16">
+                    <TextBlock Text="Chek ma'lumotlari:" FontWeight="Bold" FontSize="16" Foreground="{StaticResource BrushTextPrimary}" Margin="0 0 16 0"/>
+                    <TextBlock Text="{Binding FoundSale.SaleNumber, StringFormat='Raqami: {0}'}" Foreground="{StaticResource BrushTextSec}" Margin="0 0 16 0"/>
+                    <TextBlock Text="{Binding FoundSale.CreatedAt, StringFormat='Sana: {0:dd.MM.yyyy HH:mm}'}" Foreground="{StaticResource BrushTextSec}" Margin="0 0 16 0"/>
+                    <TextBlock Text="{Binding FoundSale.CashierName, StringFormat='Kassir: {0}'}" Foreground="{StaticResource BrushTextSec}"/>
+                </StackPanel>
+
+                <DataGrid Grid.Row="1" ItemsSource="{Binding FoundSale.Items}"
+                          AutoGenerateColumns="False" IsReadOnly="True"
+                          HeadersVisibility="Column" GridLinesVisibility="None"
+                          BorderThickness="0" Background="Transparent" RowBackground="Transparent"
+                          Foreground="{StaticResource BrushTextPrimary}">
+                    <DataGrid.Resources>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource BrushBgMid}"/>
+                            <Setter Property="Foreground" Value="{StaticResource BrushTextSec}"/>
+                            <Setter Property="FontWeight" Value="SemiBold"/>
+                            <Setter Property="Padding" Value="10"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+                        </Style>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+                        </Style>
+                    </DataGrid.Resources>
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Barkod" Binding="{Binding Barcode}" Width="150"/>
+                        <DataGridTextColumn Header="Mahsulot" Binding="{Binding ProductName}" Width="*"/>
+                        <DataGridTextColumn Header="Narxi" Binding="{Binding UnitPrice, StringFormat={}{0:N0} som}" Width="120"/>
+                        <DataGridTextColumn Header="Soni" Binding="{Binding Quantity}" Width="80"/>
+                        <DataGridTextColumn Header="Jami" Binding="{Binding Total, StringFormat={}{0:N0} som}" Width="120" FontWeight="Bold"/>
+                    </DataGrid.Columns>
+                </DataGrid>
+
+                <Grid Grid.Row="2" Margin="0 16 0 0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Jami qaytariladigan summa:" FontSize="16" Foreground="{StaticResource BrushTextPrimary}" Margin="0 0 8 0"/>
+                        <TextBlock Text="{Binding FoundSale.Total, StringFormat={}{0:N0} som}" FontSize="20" FontWeight="Bold" Foreground="{StaticResource BrushRed}"/>
+                    </StackPanel>
+
+                    <Button Grid.Column="1" Content="To'liq Qaytarish (Vozvrat)" Style="{StaticResource BtnAccent}" 
+                            Background="{StaticResource BrushRed}" Command="{Binding ReturnSaleCommand}" 
+                            Width="250" Height="45" FontSize="16" FontWeight="Bold"/>
+                </Grid>
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

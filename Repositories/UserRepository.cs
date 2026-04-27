@@ -48,7 +48,7 @@ public class UserRepository : IUserRepository
     {
         using var conn = _db.GetConnection();
         var rows = await conn.ExecuteAsync(@"
-            UPDATE Users SET FullName=@FullName, Role=@Role, IsActive=@IsActive
+            UPDATE Users SET FullName=@FullName, Role=@Role, IsActive=@IsActive, PasswordHash=@PasswordHash
             WHERE Id=@Id", user);
         return rows > 0;
     }

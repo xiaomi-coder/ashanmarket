@@ -8,12 +8,17 @@ public interface ISaleRepository
 {
     Task<int> CreateSaleAsync(Sale sale);
     Task<Sale?> GetByIdAsync(int id);
+    Task<Sale?> GetBySaleNumberAsync(string saleNumber);
     Task<IEnumerable<Sale>> GetSalesAsync(DateTime from, DateTime to);
     Task<IEnumerable<Sale>> GetSalesByCashierAndDateAsync(int cashierId, DateTime from, DateTime to);
     Task<DailySalesReport> GetDailyReportAsync(DateTime date);
     Task<IEnumerable<TopProduct>> GetTopProductsAsync(DateTime from, DateTime to, int limit = 10);
     Task<decimal> GetRevenueSummaryAsync(DateTime from, DateTime to);
     Task<string> GenerateSaleNumberAsync();
+    
+    // Sync
+    Task<IEnumerable<Sale>> GetUnsyncedSalesAsync();
+    Task MarkSalesAsSyncedAsync(IEnumerable<int> saleIds);
 }
 
 public class SaleRepository : ISaleRepository
@@ -69,6 +74,19 @@ public class SaleRepository : ISaleRepository
 
         var items = await conn.QueryAsync<SaleItem>(
             "SELECT * FROM SaleItems WHERE SaleId=@SaleId", new { SaleId = id });
+        sale.Items = items.ToList();
+        return sale;
+    }
+
+    public async Task<Sale?> GetBySaleNumberAsync(string saleNumber)
+    {
+        using var conn = _db.GetConnection();
+        var sale = await conn.QueryFirstOrDefaultAsync<Sale>(
+            "SELECT * FROM Sales WHERE SaleNumber=@SaleNumber", new { SaleNumber = saleNumber });
+        if (sale == null) return null;
+
+        var items = await conn.QueryAsync<SaleItem>(
+            "SELECT * FROM SaleItems WHERE SaleId=@SaleId", new { SaleId = sale.Id });
         sale.Items = items.ToList();
         return sale;
     }
@@ -170,5 +188,44 @@ public class SaleRepository : ISaleRepository
         var count = await conn.QuerySingleAsync<int>(
             "SELECT COUNT(*) FROM Sales WHERE DATE(CreatedAt) = DATE('now','localtime')");
         return $"{DateTime.Now:yyyyMMdd}-{(count + 1):D4}";
+    }
+
+    public async Task<IEnumerable<Sale>> GetUnsyncedSalesAsync()
+    {
+        using var conn = _db.GetConnection();
+        var sales = await conn.QueryAsync<Sale>(@"
+            SELECT * FROM Sales 
+            WHERE IsSynced = 0 AND Status = 'Completed'
+            ORDER BY CreatedAt ASC");
+
+        var saleList = sales.ToList();
+        if (!saleList.Any()) return saleList;
+
+        var saleIds = saleList.Select(s => s.Id).ToArray();
+        var items = await conn.QueryAsync<SaleItem>(@"
+            SELECT * FROM SaleItems WHERE SaleId IN @SaleIds",
+            new { SaleIds = saleIds });
+
+        var itemsBySale = items.GroupBy(i => i.SaleId).ToDictionary(g => g.Key, g => g.ToList());
+        foreach (var sale in saleList)
+        {
+            if (itemsBySale.TryGetValue(sale.Id, out var saleItems))
+            {
+                sale.Items = saleItems;
+            }
+        }
+        return saleList;
+    }
+
+    public async Task MarkSalesAsSyncedAsync(IEnumerable<int> saleIds)
+    {
+        if (saleIds == null || !saleIds.Any()) return;
+        
+        using var conn = _db.GetConnection();
+        await conn.ExecuteAsync(@"
+            UPDATE Sales 
+            SET IsSynced = 1 
+            WHERE Id IN @SaleIds", 
+            new { SaleIds = saleIds });
     }
 }

@@ -14,6 +14,7 @@ public class Sale
     public decimal Change { get; set; }
     public string PaymentMethod { get; set; } = "Naqd";
     public string Status { get; set; } = "Completed";
+    public bool IsSynced { get; set; } = false;
     public DateTime CreatedAt { get; set; } = DateTime.Now;
     public List<SaleItem> Items { get; set; } = new();
 }
