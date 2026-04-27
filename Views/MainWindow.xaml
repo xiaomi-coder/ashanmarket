@@ -1,0 +1,115 @@
+<Window x:Class="SupermarketPOS.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:SupermarketPOS.Views"
+        xmlns:vm="clr-namespace:SupermarketPOS.ViewModels"
+        Title="SupermarketPOS"
+        MinWidth="1200" MinHeight="720"
+        Width="1400" Height="860"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource BrushBgDark}"
+        KeyDown="Window_KeyDown">
+
+    <Window.Resources>
+
+        <DataTemplate DataType="{x:Type vm:SalesViewModel}">
+            <views:SalesView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProductManagementViewModel}">
+            <views:ProductManagementView/>
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ReportsViewModel}">
+            <views:ReportsView/>
+        </DataTemplate>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- ═══ SIDEBAR ══════════════════════════════════════════════════ -->
+        <Border Grid.Column="0"
+                Background="{StaticResource BrushBgMid}"
+                BorderBrush="{StaticResource BrushBorder}"
+                BorderThickness="0 0 1 0">
+            <DockPanel>
+
+                <!-- Header -->
+                <Border DockPanel.Dock="Top" Padding="20 24 20 20"
+                        Background="{StaticResource BrushBgDark}">
+                    <StackPanel>
+                        <TextBlock Text="🛒 SuperMarket" FontSize="18" FontWeight="Bold"
+                                   Foreground="{StaticResource BrushTextPrimary}"
+                                   FontFamily="Segoe UI"/>
+                        <TextBlock Text="{Binding CurrentUserName, StringFormat='👤 {0}'}"
+                                   FontSize="12"
+                                   Foreground="{StaticResource BrushTextSec}"
+                                   Margin="0 4 0 0"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- Bottom actions -->
+                <StackPanel DockPanel.Dock="Bottom" Margin="12 12">
+                    <Separator/>
+                    <Button Style="{StaticResource BtnBase}"
+                            Content="{Binding ShiftStatusText}"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="16 10"
+                            Foreground="{StaticResource BrushTextSec}"
+                            Background="Transparent"
+                            Command="{Binding ManageShiftCommand}"/>
+                            
+                    <Button Style="{StaticResource BtnBase}"
+                            Content="💾  Zaxira saqlash"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Padding="16 10"
+                            Foreground="{StaticResource BrushTextSec}"
+                            Background="Transparent"
+                            Command="{Binding BackupCommand}"/>
+                </StackPanel>
+
+                <!-- Navigation -->
+                <StackPanel Margin="8 16 8 0">
+
+                    <!-- Low stock badge -->
+                    <Border Background="{StaticResource BrushOrange}"
+                            CornerRadius="6" Padding="12 8" Margin="8 0 8 16"
+                            Visibility="{Binding LowStockCount, Converter={StaticResource IntVis}}">
+                        <TextBlock Foreground="White" FontSize="12" FontWeight="SemiBold"
+                                   Text="{Binding LowStockCount, StringFormat='⚠️  {0} mahsulot kam qoldi'}"/>
+                    </Border>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="🏪   Sotuv (F1)"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateSalesCommand}"
+                            Margin="0 2"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="📦   Mahsulotlar (F2)"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateProductsCommand}"
+                            Margin="0 2"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="📊   Hisobotlar (F3)"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateReportsCommand}"
+                            Margin="0 2"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ═══ CONTENT AREA ═════════════════════════════════════════════ -->
+        <ContentPresenter Grid.Column="1" Content="{Binding CurrentView}"/>
+    </Grid>
+</Window>
