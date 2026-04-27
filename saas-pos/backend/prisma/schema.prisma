@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./pos.db"
+}
+
+model SuperAdmin {
+  id           Int      @id @default(autoincrement())
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Tenant {
+  id          Int       @id @default(autoincrement())
+  name        String
+  slug        String    @unique
+  logoUrl     String?
+  phone       String?
+  address     String?
+  apiKey      String    @unique @default(uuid())
+  plan        String    @default("monthly")
+  status      String    @default("active")
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  users       User[]
+  categories  Category[]
+  products    Product[]
+  sales       Sale[]
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  tenantId     Int
+  username     String
+  passwordHash String
+  fullName     String
+  role         String   @default("cashier")
+  isActive     Boolean  @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime @default(now())
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  sales        Sale[]
+
+  @@unique([tenantId, username])
+}
+
+model Category {
+  id          Int       @id @default(autoincrement())
+  tenantId    Int
+  name        String
+  color       String    @default("#2196F3")
+  isActive    Boolean   @default(true)
+
+  tenant      Tenant    @relation(fields: [tenantId], references: [id])
+  products    Product[]
+
+  @@unique([tenantId, name])
+}
+
+model Product {
+  id                Int       @id @default(autoincrement())
+  tenantId          Int
+  barcode           String
+  name              String
+  price             Float     @default(0)
+  costPrice         Float     @default(0)
+  stock             Int       @default(0)
+  lowStockThreshold Int       @default(10)
+  categoryId        Int?
+  unit              String    @default("dona")
+  isActive          Boolean   @default(true)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  tenant            Tenant    @relation(fields: [tenantId], references: [id])
+  category          Category? @relation(fields: [categoryId], references: [id])
+  saleItems         SaleItem[]
+
+  @@unique([tenantId, barcode])
+}
+
+model Sale {
+  id            Int        @id @default(autoincrement())
+  tenantId      Int
+  saleNumber    String
+  userId        Int
+  cashierName   String
+  subTotal      Float      @default(0)
+  discount      Float      @default(0)
+  tax           Float      @default(0)
+  total         Float      @default(0)
+  amountPaid    Float      @default(0)
+  change        Float      @default(0)
+  paymentMethod String     @default("Naqd")
+  status        String     @default("completed")
+  syncedFromExe Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+
+  tenant        Tenant     @relation(fields: [tenantId], references: [id])
+  user          User       @relation(fields: [userId], references: [id])
+  items         SaleItem[]
+
+  @@unique([tenantId, saleNumber])
+}
+
+model SaleItem {
+  id          Int      @id @default(autoincrement())
+  saleId      Int
+  productId   Int
+  productName String
+  barcode     String
+  unitPrice   Float    @default(0)
+  costPrice   Float    @default(0)
+  quantity    Int
+  discount    Float    @default(0)
+
+  sale        Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id])
+}
