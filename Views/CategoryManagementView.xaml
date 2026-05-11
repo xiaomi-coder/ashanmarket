@@ -107,8 +107,7 @@
                          Margin="0 0 0 12"/>
 
                 <Label Content="KATEGORIYA RANGI"/>
-                <ComboBox Style="{StaticResource CmbBox}"
-                          ItemsSource="{Binding AvailableColors}"
+                <ComboBox ItemsSource="{Binding AvailableColors}"
                           SelectedItem="{Binding SelectedNamedColor, UpdateSourceTrigger=PropertyChanged}"
                           Margin="0 0 0 16">
                     <ComboBox.ItemTemplate>

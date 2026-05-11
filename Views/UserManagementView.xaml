@@ -6,6 +6,8 @@
 
     <UserControl.Resources>
         <converters:BoolToVisibilityConverter x:Key="BoolVis"/>
+        <converters:BoolToColorConverter x:Key="BoolToColorConverter"/>
+        <converters:BoolToStatusTextConverter x:Key="BoolToStatusTextConverter"/>
     </UserControl.Resources>
 
     <Grid Margin="16">
@@ -30,7 +32,7 @@
                          ToolTip="O'zgartirish uchun yangisini yozing. Yangi xodim uchun bo'sh qolsa '12345' bo'ladi."/>
 
                 <Label Content="LAVOZIM (Role)"/>
-                <ComboBox Style="{StaticResource CmbBox}" ItemsSource="{Binding AvailableRoles}" SelectedItem="{Binding Role}" Margin="0 0 0 16"/>
+                <ComboBox ItemsSource="{Binding AvailableRoles}" SelectedItem="{Binding Role}" Margin="0 0 0 16"/>
 
                 <UniformGrid Columns="2" Margin="0 0 0 8">
                     <Button Content="Tozalash" Style="{StaticResource BtnBase}" Command="{Binding ClearCommand}" Margin="0 0 4 0"/>

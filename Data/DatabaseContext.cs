@@ -92,11 +92,6 @@ CREATE TABLE IF NOT EXISTS Sales (
     FOREIGN KEY (UserId) REFERENCES Users(Id)
 );
 
-    IsSynced      INTEGER NOT NULL DEFAULT 0,
-    CreatedAt     TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
-    FOREIGN KEY (UserId) REFERENCES Users(Id)
-);
-
 CREATE TABLE IF NOT EXISTS SaleItems (
     Id          INTEGER PRIMARY KEY AUTOINCREMENT,
     SaleId      INTEGER NOT NULL,

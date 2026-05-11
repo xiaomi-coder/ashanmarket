@@ -34,10 +34,10 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0 0 0 16" HorizontalAlignment="SpaceBetween">
-                    <TextBlock Text="Smenadagi xarajatlar" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}"/>
-                    <Button Content="Yangilash" Style="{StaticResource BtnBase}" Command="{Binding LoadExpensesCommand}" Padding="16 4"/>
-                </StackPanel>
+                <Grid Grid.Row="0" Margin="0 0 0 16">
+                    <TextBlock Text="Smenadagi xarajatlar" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <Button Content="Yangilash" Style="{StaticResource BtnBase}" Command="{Binding LoadExpensesCommand}" Padding="16 4" HorizontalAlignment="Right"/>
+                </Grid>
 
                 <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}"
                           AutoGenerateColumns="False" IsReadOnly="True"

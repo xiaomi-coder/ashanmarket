@@ -38,7 +38,7 @@
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="380"/>
-            <ColumnDefinition Width="350"/>
+            <ColumnDefinition Width="320"/>
         </Grid.ColumnDefinitions>
 
         <!-- ═══ COL 0: POS CATEGORY & PRODUCT GRID ═══════════════════════ -->
@@ -55,7 +55,9 @@
                          Background="Transparent" BorderThickness="0"
                          ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                          ScrollViewer.VerticalScrollBarVisibility="Disabled"
-                         Margin="0 0 0 20">
+                         ScrollViewer.PanningMode="HorizontalOnly"
+                         PreviewMouseWheel="Categories_PreviewMouseWheel"
+                         Margin="0 0 0 20" Padding="0 0 0 8">
                     <ListBox.ItemsPanel>
                         <ItemsPanelTemplate>
                             <VirtualizingStackPanel Orientation="Horizontal"/>
@@ -272,14 +274,14 @@
                               BorderThickness="0" Background="Transparent">
                         <ListView.View>
                             <GridView>
-                                <GridViewColumn Header="Mahsulot" Width="220"
+                                <GridViewColumn Header="Mahsulot" Width="130"
                                                 DisplayMemberBinding="{Binding ProductName}"/>
-                                <GridViewColumn Header="Narx" Width="90"
+                                <GridViewColumn Header="Narx" Width="65"
                                                 DisplayMemberBinding="{Binding UnitPrice, StringFormat='{}{0:N0}'}"/>
-                                <GridViewColumn Header="Soni" Width="90">
+                                <GridViewColumn Header="Soni" Width="85">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                                 <Button Content="−" Width="24" Height="24"
                                                         Style="{StaticResource BtnBase}"
                                                         Padding="0"
@@ -287,7 +289,7 @@
                                                         Tag="{Binding}"
                                                         Click="DecreaseQty_Click"/>
                                                 <TextBlock Text="{Binding Quantity}"
-                                                           Width="30" TextAlignment="Center"
+                                                           Width="26" TextAlignment="Center"
                                                            VerticalAlignment="Center"
                                                            Foreground="{StaticResource BrushTextPrimary}"/>
                                                 <Button Content="+" Width="24" Height="24"
@@ -300,9 +302,9 @@
                                         </DataTemplate>
                                     </GridViewColumn.CellTemplate>
                                 </GridViewColumn>
-                                <GridViewColumn Header="Jami" Width="90"
+                                <GridViewColumn Header="Jami" Width="65"
                                                 DisplayMemberBinding="{Binding Total, StringFormat='{}{0:N0}'}"/>
-                                <GridViewColumn Header="" Width="36">
+                                <GridViewColumn Header="" Width="28">
                                     <GridViewColumn.CellTemplate>
                                         <DataTemplate>
                                             <Button Content="✕" Width="28" Height="28"

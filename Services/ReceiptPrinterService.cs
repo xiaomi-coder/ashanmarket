@@ -83,12 +83,17 @@ public class ReceiptPrinterService : IReceiptPrinterService
         };
         doc.Blocks.Add(footer);
 
-        // Print dialog (you can skip the dialog and print directly to default printer in production)
+        // Print dialog (skip the dialog and print directly to default printer in production)
         var dialog = new PrintDialog();
-        if (dialog.ShowDialog() == true)
+        try
         {
+            // By not calling ShowDialog(), it automatically uses the Default Printer
             IDocumentPaginatorSource idpSource = doc;
             dialog.PrintDocument(idpSource.DocumentPaginator, $"Receipt_{sale.SaleNumber}");
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Chek chiqarishda xatolik yuz berdi (Printerni tekshiring):\n{ex.Message}", "Printer xatosi", MessageBoxButton.OK, MessageBoxImage.Warning);
         }
     }
 }

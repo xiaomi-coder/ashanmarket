@@ -302,7 +302,7 @@ public class SalesViewModel : BaseViewModel
         SetStatus("Savat kutishga olindi");
     }
 
-    private void ResumeCart(HeldCart cart)
+    private void ResumeCart(HeldCart? cart)
     {
         if (cart == null) return;
         
