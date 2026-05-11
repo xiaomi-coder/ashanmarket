@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:SupermarketPOS.Views"
         xmlns:vm="clr-namespace:SupermarketPOS.ViewModels"
+        xmlns:conv="clr-namespace:SupermarketPOS.Converters"
         Title="SupermarketPOS"
         MinWidth="1200" MinHeight="720"
         Width="1400" Height="860"
@@ -11,6 +12,7 @@
         KeyDown="Window_KeyDown">
 
     <Window.Resources>
+        <conv:BoolToVisibilityConverter x:Key="BoolVis"/>
 
         <DataTemplate DataType="{x:Type vm:SalesViewModel}">
             <views:SalesView/>
@@ -40,7 +42,7 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="220"/>
+            <ColumnDefinition Width="Auto"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
@@ -48,20 +50,42 @@
         <Border Grid.Column="0"
                 Background="{StaticResource BrushBgMid}"
                 BorderBrush="{StaticResource BrushBorder}"
-                BorderThickness="0 0 1 0">
+                BorderThickness="0 0 1 0"
+                ClipToBounds="True">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Width" Value="220"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsSidebarExpanded}" Value="False">
+                            <Setter Property="Width" Value="66"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
             <DockPanel>
 
                 <!-- Header -->
-                <Border DockPanel.Dock="Top" Padding="20 24 20 20"
+                <Border DockPanel.Dock="Top" Padding="15 24 15 20"
                         Background="{StaticResource BrushBgDark}">
                     <StackPanel>
-                        <TextBlock Text="🛒 SuperMarket" FontSize="18" FontWeight="Bold"
-                                   Foreground="{StaticResource BrushTextPrimary}"
-                                   FontFamily="Segoe UI"/>
+                        <DockPanel Margin="0 0 0 10">
+                            <Button DockPanel.Dock="Left" Content="☰" FontSize="18"
+                                    Background="Transparent" BorderThickness="0" Foreground="White"
+                                    Command="{Binding ToggleSidebarCommand}" Cursor="Hand" Margin="0 0 10 0"
+                                    Padding="4" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBox Text="{Binding StoreName, UpdateSourceTrigger=PropertyChanged}" 
+                                     FontSize="18" FontWeight="Bold"
+                                     Foreground="{StaticResource BrushTextPrimary}"
+                                     FontFamily="Segoe UI"
+                                     Background="Transparent" BorderThickness="0"
+                                     ToolTip="Do'kon nomini o'zgartirish uchun shu yerga yozing"
+                                     Visibility="{Binding IsSidebarExpanded, Converter={StaticResource BoolVis}}"/>
+                        </DockPanel>
                         <TextBlock Text="{Binding CurrentUserName, StringFormat='👤 {0}'}"
                                    FontSize="12"
                                    Foreground="{StaticResource BrushTextSec}"
-                                   Margin="0 4 0 0"/>
+                                   Margin="0 4 0 0"
+                                   Visibility="{Binding IsSidebarExpanded, Converter={StaticResource BoolVis}}"/>
                     </StackPanel>
                 </Border>
 

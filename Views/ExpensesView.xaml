@@ -4,82 +4,177 @@
              Background="{StaticResource BrushBgDark}">
 
     <Grid Margin="16">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="350"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
 
-        <!-- Form for adding expense -->
-        <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0 0 16 0" VerticalAlignment="Top">
-            <StackPanel>
-                <TextBlock Text="Kassadan chiqim" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0 0 0 16"/>
+        <!-- Top Dashboard Cards -->
+        <Grid Grid.Row="0" Margin="0 0 0 16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Label Content="SUMMA"/>
-                <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewAmount, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12"/>
+            <!-- Card 1: Today -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" Background="#FF1E2640" BorderBrush="#FF2A365C" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Bugungi Xarajatlar" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
+                    <TextBlock Text="{Binding TotalExpensesToday, StringFormat='{}{0:N0} so\'m'}" FontSize="24" FontWeight="Bold" Foreground="#FFFF4757" Margin="0 8 0 0"/>
+                </StackPanel>
+            </Border>
 
-                <Label Content="XARAJAT SABABI (Izoh)"/>
-                <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewReason, UpdateSourceTrigger=PropertyChanged}" 
-                         Height="80" TextWrapping="Wrap" AcceptsReturn="True" Margin="0 0 0 16"/>
+            <!-- Card 2: This Month -->
+            <Border Grid.Column="2" Style="{StaticResource Card}" Background="#FF1E2640" BorderBrush="#FF2A365C" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Joriy Oy Xarajatlari" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
+                    <TextBlock Text="{Binding MonthExpenses, StringFormat='{}{0:N0} so\'m'}" FontSize="24" FontWeight="Bold" Foreground="#FFFF4757" Margin="0 8 0 0"/>
+                </StackPanel>
+            </Border>
 
-                <Button Style="{StaticResource BtnAccent}" Content="Xarajatni saqlash" Command="{Binding AddExpenseCommand}" Height="40"/>
-            </StackPanel>
-        </Border>
+            <!-- Card 3: Filtered Total -->
+            <Border Grid.Column="4" Style="{StaticResource Card}" Background="#FF1A2138" BorderBrush="{StaticResource BrushAccent}" BorderThickness="1">
+                <StackPanel>
+                    <TextBlock Text="Filtrlangan Summa" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
+                    <TextBlock Text="{Binding FilteredExpensesTotal, StringFormat='{}{0:N0} so\'m'}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0 8 0 0"/>
+                </StackPanel>
+            </Border>
+        </Grid>
 
-        <!-- Expenses List -->
-        <Border Grid.Column="1" Style="{StaticResource Card}">
-            <Grid>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"/>
-                    <RowDefinition Height="*"/>
-                    <RowDefinition Height="Auto"/>
-                </Grid.RowDefinitions>
+        <!-- Main Content -->
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="350"/>
+                <ColumnDefinition Width="16"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
 
-                <Grid Grid.Row="0" Margin="0 0 0 16">
-                    <TextBlock Text="Smenadagi xarajatlar" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <Button Content="Yangilash" Style="{StaticResource BtnBase}" Command="{Binding LoadExpensesCommand}" Padding="16 4" HorizontalAlignment="Right"/>
+            <!-- Left: Add Expense Form -->
+            <Border Grid.Column="0" Style="{StaticResource Card}" VerticalAlignment="Top">
+                <StackPanel>
+                    <TextBlock Text="Xarajat Qo'shish" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushAccent}" Margin="0 0 0 16"/>
+
+                    <Label Content="KATEGORIYA"/>
+                    <Grid Margin="0 0 0 12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ComboBox Grid.Column="0" ItemsSource="{Binding Categories}" SelectedItem="{Binding SelectedCategory}" DisplayMemberPath="Name" 
+                                  Height="36" FontSize="14" VerticalContentAlignment="Center" Padding="8 0"/>
+                        <Button Grid.Column="1" Content="+" Width="36" Height="36" Margin="8 0 0 0" Style="{StaticResource BtnAccent}" Command="{Binding OpenAddCategoryCommand}"/>
+                    </Grid>
+
+                    <Label Content="SANA"/>
+                    <DatePicker SelectedDate="{Binding NewDate}" Margin="0 0 0 12" Height="36" FontSize="14"/>
+
+                    <Label Content="SUMMA"/>
+                    <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewAmountText, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 12" TextChanged="AmountTextBox_TextChanged"/>
+
+                    <Label Content="XARAJAT SABABI (Izoh)"/>
+                    <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewReason, UpdateSourceTrigger=PropertyChanged}" 
+                             Height="80" TextWrapping="Wrap" AcceptsReturn="True" Margin="0 0 0 16"/>
+
+                    <Button Style="{StaticResource BtnAccent}" Content="Xarajatni saqlash" Command="{Binding AddExpenseCommand}" Height="40"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Right: List and Filters -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Filters -->
+                    <Grid Grid.Row="0" Margin="0 0 0 16">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <TextBlock Text="Dan:" VerticalAlignment="Center" Foreground="{StaticResource BrushTextSec}" Margin="0 0 8 0"/>
+                        <DatePicker Grid.Column="1" SelectedDate="{Binding FilterFromDate}" Width="120" Margin="0 0 16 0"/>
+                        
+                        <TextBlock Grid.Column="2" Text="Gacha:" VerticalAlignment="Center" Foreground="{StaticResource BrushTextSec}" Margin="0 0 8 0"/>
+                        <DatePicker Grid.Column="3" SelectedDate="{Binding FilterToDate}" Width="120" Margin="0 0 16 0"/>
+                        
+                        <ComboBox Grid.Column="4" ItemsSource="{Binding Categories}" SelectedItem="{Binding FilterCategory}" DisplayMemberPath="Name" Width="150" Margin="0 0 16 0"/>
+                        
+                        <Button Grid.Column="5" Content="Filtrlash" Style="{StaticResource BtnBase}" Command="{Binding FilterCommand}" Padding="16 4"/>
+                    </Grid>
+
+                    <!-- DataGrid -->
+                    <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}"
+                              AutoGenerateColumns="False" IsReadOnly="True"
+                              HeadersVisibility="Column" GridLinesVisibility="Horizontal" HorizontalGridLinesBrush="#FF2E3460"
+                              BorderThickness="0" Background="Transparent" RowBackground="Transparent" AlternatingRowBackground="#FF1A1F2E"
+                              Foreground="{StaticResource BrushTextPrimary}">
+                        <DataGrid.Resources>
+                            <Style TargetType="DataGridColumnHeader">
+                                <Setter Property="Background" Value="{StaticResource BrushBgMid}"/>
+                                <Setter Property="Foreground" Value="{StaticResource BrushTextSec}"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Padding" Value="10"/>
+                                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
+                            </Style>
+                        </DataGrid.Resources>
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Sana" Binding="{Binding CreatedAt, StringFormat='dd.MM.yyyy HH:mm'}" Width="130"/>
+                            <DataGridTextColumn Header="Kategoriya" Binding="{Binding CategoryName}" Width="120"/>
+                            <DataGridTextColumn Header="Summa" Binding="{Binding Amount, StringFormat='{}{0:N0} so\'m'}" Width="130" FontWeight="Bold">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="#FFFF4757"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+                            <DataGridTextColumn Header="Izoh" Binding="{Binding Reason}" Width="*"/>
+                            <DataGridTextColumn Header="Kassir" Binding="{Binding CashierName}" Width="120"/>
+                        </DataGrid.Columns>
+                    </DataGrid>
                 </Grid>
+            </Border>
+        </Grid>
 
-                <DataGrid Grid.Row="1" ItemsSource="{Binding Expenses}"
-                          AutoGenerateColumns="False" IsReadOnly="True"
-                          HeadersVisibility="Column" GridLinesVisibility="None"
-                          BorderThickness="0" Background="Transparent" RowBackground="Transparent"
-                          Foreground="{StaticResource BrushTextPrimary}">
-                    <DataGrid.Resources>
-                        <Style TargetType="DataGridColumnHeader">
-                            <Setter Property="Background" Value="{StaticResource BrushBgMid}"/>
-                            <Setter Property="Foreground" Value="{StaticResource BrushTextSec}"/>
-                            <Setter Property="FontWeight" Value="SemiBold"/>
-                            <Setter Property="Padding" Value="10"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
-                        </Style>
-                        <Style TargetType="DataGridRow">
-                            <Setter Property="Background" Value="Transparent"/>
-                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
-                            <Setter Property="BorderBrush" Value="{StaticResource BrushBorder}"/>
-                        </Style>
-                    </DataGrid.Resources>
-                    <DataGrid.Columns>
-                        <DataGridTextColumn Header="Sana" Binding="{Binding CreatedAt, StringFormat={}{0:HH:mm}}" Width="80"/>
-                        <DataGridTextColumn Header="Sabab" Binding="{Binding Reason}" Width="*"/>
-                        <DataGridTextColumn Header="Summa" Binding="{Binding Amount, StringFormat={}{0:N0} som}" Width="150" FontWeight="Bold">
-                            <DataGridTextColumn.ElementStyle>
-                                <Style TargetType="TextBlock">
-                                    <Setter Property="Foreground" Value="{StaticResource BrushRed}"/>
-                                </Style>
-                            </DataGridTextColumn.ElementStyle>
-                        </DataGridTextColumn>
-                        <DataGridTextColumn Header="Kassir" Binding="{Binding CashierName}" Width="120"/>
-                    </DataGrid.Columns>
-                </DataGrid>
-
-                <Border Grid.Row="2" Background="{StaticResource BrushBgMid}" CornerRadius="4" Padding="16" Margin="0 16 0 0">
-                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                        <TextBlock Text="Jami chiqim:" FontSize="16" Foreground="{StaticResource BrushTextSec}" VerticalAlignment="Center" Margin="0 0 16 0"/>
-                        <TextBlock Text="{Binding TotalExpensesToday, StringFormat={}{0:N0} som}" FontSize="24" FontWeight="Bold" Foreground="{StaticResource BrushRed}"/>
-                    </StackPanel>
-                </Border>
-            </Grid>
+        <!-- Overlay Dialog for Adding Category -->
+        <Border Background="#99000000" Panel.ZIndex="100">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed"/>
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsAddCategoryOpen}" Value="True">
+                            <Setter Property="Visibility" Value="Visible"/>
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            
+            <Border Width="350" Background="{StaticResource BrushBgMid}" CornerRadius="12" Padding="24" VerticalAlignment="Center" HorizontalAlignment="Center">
+                <StackPanel>
+                    <TextBlock Text="Yangi Kategoriya Qo'shish" FontSize="18" FontWeight="Bold" Foreground="{StaticResource BrushTextPrimary}" Margin="0 0 0 16"/>
+                    <Label Content="KATEGORIYA NOMI"/>
+                    <TextBox Style="{StaticResource TxtBox}" Text="{Binding NewCategoryName, UpdateSourceTrigger=PropertyChanged}" Margin="0 0 0 24"/>
+                    
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="8"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Button Grid.Column="0" Content="BEKOR QILISH" Style="{StaticResource BtnBase}" Command="{Binding CloseAddCategoryCommand}" Height="40"/>
+                        <Button Grid.Column="2" Content="SAQLASH" Style="{StaticResource BtnAccent}" Command="{Binding SaveCategoryCommand}" Height="40"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
         </Border>
     </Grid>
 </UserControl>

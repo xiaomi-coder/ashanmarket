@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS Customers (
     TotalSpent      REAL    NOT NULL DEFAULT 0,
     DebtBalance     REAL    NOT NULL DEFAULT 0,
     DiscountPercent REAL    NOT NULL DEFAULT 0,
+    DebtTermDays    INTEGER NOT NULL DEFAULT 30,
+    OldestDebtDate  TEXT,
     CreatedAt       TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
 );
 
@@ -144,14 +146,22 @@ CREATE TABLE IF NOT EXISTS DebtTransactions (
     FOREIGN KEY (SaleId) REFERENCES Sales(Id)
 );
 
+CREATE TABLE IF NOT EXISTS ExpenseCategories (
+    Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    Name        TEXT    NOT NULL UNIQUE,
+    IsActive    INTEGER NOT NULL DEFAULT 1
+);
+
 CREATE TABLE IF NOT EXISTS Expenses (
     Id          INTEGER PRIMARY KEY AUTOINCREMENT,
     Amount      REAL    NOT NULL,
+    CategoryId  INTEGER,
     Reason      TEXT    NOT NULL,
     CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
     UserId      INTEGER NOT NULL,
     CashierName TEXT    NOT NULL DEFAULT '',
     ShiftId     INTEGER,
+    FOREIGN KEY (CategoryId) REFERENCES ExpenseCategories(Id),
     FOREIGN KEY (UserId) REFERENCES Users(Id),
     FOREIGN KEY (ShiftId) REFERENCES Shifts(Id)
 );
@@ -173,6 +183,9 @@ CREATE INDEX IF NOT EXISTS idx_debt_customer    ON DebtTransactions(CustomerId);
         try { using var u2 = conn.CreateCommand(); u2.CommandText = "ALTER TABLE Customers ADD COLUMN DebtBalance REAL NOT NULL DEFAULT 0;"; u2.ExecuteNonQuery(); } catch { }
         try { using var u3 = conn.CreateCommand(); u3.CommandText = "ALTER TABLE Products ADD COLUMN ParentProductId INTEGER;"; u3.ExecuteNonQuery(); } catch { }
         try { using var u4 = conn.CreateCommand(); u4.CommandText = "ALTER TABLE Products ADD COLUMN Multiplier REAL NOT NULL DEFAULT 1;"; u4.ExecuteNonQuery(); } catch { }
+        try { using var u5 = conn.CreateCommand(); u5.CommandText = "ALTER TABLE Customers ADD COLUMN DebtTermDays INTEGER NOT NULL DEFAULT 30;"; u5.ExecuteNonQuery(); } catch { }
+        try { using var u6 = conn.CreateCommand(); u6.CommandText = "ALTER TABLE Customers ADD COLUMN OldestDebtDate TEXT;"; u6.ExecuteNonQuery(); } catch { }
+        try { using var u7 = conn.CreateCommand(); u7.CommandText = "ALTER TABLE Expenses ADD COLUMN CategoryId INTEGER;"; u7.ExecuteNonQuery(); } catch { }
     }
 
     public string GetDatabasePath()

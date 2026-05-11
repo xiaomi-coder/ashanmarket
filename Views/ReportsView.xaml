@@ -30,7 +30,8 @@
                             Margin="0 0 8 0"/>
                     <Button Content="Bugun"    Style="{StaticResource BtnBase}" Padding="12 8" Margin="0 0 4 0" Command="{Binding TodayCommand}"/>
                     <Button Content="Hafta"    Style="{StaticResource BtnBase}" Padding="12 8" Margin="0 0 4 0" Command="{Binding ThisWeekCommand}"/>
-                    <Button Content="Oy"       Style="{StaticResource BtnBase}" Padding="12 8" Command="{Binding ThisMonthCommand}"/>
+                    <Button Content="Oy"       Style="{StaticResource BtnBase}" Padding="12 8" Margin="0 0 4 0" Command="{Binding ThisMonthCommand}"/>
+                    <Button Content="Yil"      Style="{StaticResource BtnBase}" Padding="12 8" Command="{Binding ThisYearCommand}"/>
                 </StackPanel>
             </StackPanel>
         </Border>

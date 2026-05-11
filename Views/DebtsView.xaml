@@ -79,7 +79,21 @@
                                     </Border>
                                     
                                     <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                        <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}"/>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}"/>
+                                            <TextBlock Text="⚠️ Muddati o'tgan" Foreground="#FFFF4757" FontSize="12" Margin="5 2 0 0" VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsOverdue}" Value="True">
+                                                                <Setter Property="Visibility" Value="Visible"/>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding Phone}" FontSize="13" Foreground="{StaticResource BrushTextSec}"/>
                                     </StackPanel>
                                     
@@ -131,6 +145,22 @@
                                 <TextBox Text="{Binding PaymentAmount, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Padding="8" Background="#FF1A1F2E" Foreground="White" BorderBrush="#FF2E3460" Margin="0 0 0 12"/>
                                 
                                 <Button Content="QARZNI TO'LASH" Command="{Binding PayDebtCommand}" Height="40" FontSize="14" FontWeight="Bold" Background="#FF2ED573" Foreground="White">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Term Section -->
+                        <Border Grid.Column="2" Background="#FF1F2437" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="#FF2E3460">
+                            <StackPanel>
+                                <TextBlock Text="Qarz muddati (kun):" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
+                                <TextBox Text="{Binding SelectedCustomer.DebtTermDays, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Padding="8" Background="#FF1A1F2E" Foreground="White" BorderBrush="#FF2E3460" Margin="0 4 0 16"/>
+                                
+                                <Button Content="SAQLASH" Command="{Binding UpdateTermCommand}" Height="40" FontSize="14" FontWeight="Bold" Background="#FF3D7FFF" Foreground="White">
                                     <Button.Resources>
                                         <Style TargetType="Border">
                                             <Setter Property="CornerRadius" Value="6"/>

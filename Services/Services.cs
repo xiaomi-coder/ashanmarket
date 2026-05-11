@@ -203,6 +203,7 @@ public interface ICustomerService
     Task<IEnumerable<DebtTransaction>> GetDebtTransactionsAsync(int customerId);
     Task<int> PayDebtAsync(int customerId, decimal amount, string notes = "Qarz to'landi");
     Task<int> AddDebtAsync(int customerId, decimal amount, int? saleId = null, string notes = "Sotuv orqali qarz");
+    Task UpdateDebtTermAsync(int customerId, int termDays);
 }
 
 public class CustomerService : ICustomerService
@@ -269,6 +270,11 @@ public class CustomerService : ICustomerService
             Notes = notes
         };
         return await _customerRepo.AddDebtTransactionAsync(transaction);
+    }
+
+    public Task UpdateDebtTermAsync(int customerId, int termDays)
+    {
+        return _customerRepo.UpdateDebtTermAsync(customerId, termDays);
     }
 }
 

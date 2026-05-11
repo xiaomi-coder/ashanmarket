@@ -28,7 +28,8 @@ public class ReceiptPrinterService : IReceiptPrinterService
         };
 
         // Header
-        var header = new Paragraph(new Run("SUPERMARKET POS"))
+        var storeName = SettingsManager.Load().StoreName;
+        var header = new Paragraph(new Run(storeName.Trim().ToUpper()))
         {
             TextAlignment = TextAlignment.Center,
             FontWeight = FontWeights.Bold,

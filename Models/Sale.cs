@@ -70,7 +70,7 @@ public class TopProduct
 {
     public string ProductName { get; set; } = string.Empty;
     public string Barcode { get; set; } = string.Empty;
-    public int QuantitySold { get; set; }
+    public double QuantitySold { get; set; }
     public decimal Revenue { get; set; }
     public decimal Profit { get; set; }
 }

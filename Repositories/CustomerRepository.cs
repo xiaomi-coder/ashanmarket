@@ -12,6 +12,7 @@ public interface ICustomerRepository
     Task<IEnumerable<Customer>> GetAllWithDebtAsync();
     Task<IEnumerable<DebtTransaction>> GetDebtTransactionsAsync(int customerId);
     Task<int> AddDebtTransactionAsync(DebtTransaction transaction);
+    Task UpdateDebtTermAsync(int customerId, int termDays);
 }
 
 public class CustomerRepository : ICustomerRepository
@@ -31,8 +32,8 @@ public class CustomerRepository : ICustomerRepository
     {
         using var conn = _db.GetConnection();
         var sql = @"
-            INSERT INTO Customers (Phone, Name, DiscountPercent)
-            VALUES (@Phone, @Name, @DiscountPercent);
+            INSERT INTO Customers (Phone, Name, DiscountPercent, DebtTermDays)
+            VALUES (@Phone, @Name, @DiscountPercent, @DebtTermDays);
             SELECT last_insert_rowid();";
         return await conn.ExecuteScalarAsync<int>(sql, customer);
     }
@@ -73,11 +74,19 @@ public class CustomerRepository : ICustomerRepository
             
             var id = await conn.ExecuteScalarAsync<int>(sql, transaction, dbTransaction);
 
-            // Update DebtBalance
             var balanceChange = transaction.Type == "Given" ? transaction.Amount : -transaction.Amount;
-            await conn.ExecuteAsync(
-                "UPDATE Customers SET DebtBalance = DebtBalance + @Change WHERE Id = @Id",
-                new { Change = balanceChange, Id = transaction.CustomerId }, dbTransaction);
+            
+            var updateSql = @"
+                UPDATE Customers 
+                SET DebtBalance = DebtBalance + @Change,
+                    OldestDebtDate = CASE 
+                        WHEN OldestDebtDate IS NULL AND (DebtBalance + @Change) > 0 THEN datetime('now','localtime')
+                        WHEN (DebtBalance + @Change) <= 0 THEN NULL
+                        ELSE OldestDebtDate
+                    END
+                WHERE Id = @Id";
+                
+            await conn.ExecuteAsync(updateSql, new { Change = balanceChange, Id = transaction.CustomerId }, dbTransaction);
 
             dbTransaction.Commit();
             return id;
@@ -87,5 +96,11 @@ public class CustomerRepository : ICustomerRepository
             dbTransaction.Rollback();
             throw;
         }
+    }
+
+    public async Task UpdateDebtTermAsync(int customerId, int termDays)
+    {
+        using var conn = _db.GetConnection();
+        await conn.ExecuteAsync("UPDATE Customers SET DebtTermDays = @Days WHERE Id = @Id", new { Days = termDays, Id = customerId });
     }
 }

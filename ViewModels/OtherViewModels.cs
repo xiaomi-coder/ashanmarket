@@ -38,6 +38,7 @@ public class ReportsViewModel : BaseViewModel
     public ICommand TodayCommand     { get; }
     public ICommand ThisWeekCommand  { get; }
     public ICommand ThisMonthCommand { get; }
+    public ICommand ThisYearCommand  { get; }
 
     public ReportsViewModel(ISaleService saleService)
     {
@@ -47,6 +48,7 @@ public class ReportsViewModel : BaseViewModel
         TodayCommand      = new AsyncRelayCommand(() => { FromDate = ToDate = DateTime.Today; return LoadReportAsync(); });
         ThisWeekCommand   = new AsyncRelayCommand(() => { FromDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek); ToDate = DateTime.Today; return LoadReportAsync(); });
         ThisMonthCommand  = new AsyncRelayCommand(() => { FromDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1); ToDate = DateTime.Today; return LoadReportAsync(); });
+        ThisYearCommand   = new AsyncRelayCommand(() => { FromDate = new DateTime(DateTime.Today.Year, 1, 1); ToDate = DateTime.Today; return LoadReportAsync(); });
     }
 
     public async Task LoadReportAsync()
@@ -169,8 +171,26 @@ public class MainViewModel : BaseViewModel
     private string _currentUserName = string.Empty;
     public string CurrentUserName { get => _currentUserName; set => SetProperty(ref _currentUserName, value); }
 
+    private string _storeName = string.Empty;
+    public string StoreName 
+    { 
+        get => _storeName; 
+        set 
+        {
+            if (SetProperty(ref _storeName, value))
+            {
+                var s = SettingsManager.Load();
+                s.StoreName = value;
+                SettingsManager.Save(s);
+            }
+        }
+    }
+
     private bool _isAdmin;
     public bool IsAdmin { get => _isAdmin; set => SetProperty(ref _isAdmin, value); }
+
+    private bool _isSidebarExpanded = true;
+    public bool IsSidebarExpanded { get => _isSidebarExpanded; set => SetProperty(ref _isSidebarExpanded, value); }
 
     private Shift? _currentShift;
     public Shift? CurrentShift { get => _currentShift; set => SetProperty(ref _currentShift, value); }
@@ -190,6 +210,7 @@ public class MainViewModel : BaseViewModel
     public ICommand BackupCommand           { get; }
     public ICommand ManageShiftCommand      { get; }
     public ICommand SyncCommand             { get; }
+    public ICommand ToggleSidebarCommand    { get; }
 
     public MainViewModel(
         SalesViewModel salesVM,
@@ -217,6 +238,7 @@ public class MainViewModel : BaseViewModel
         _authService     = authService;
         _shiftService    = shiftService;
         _currentView     = salesVM;
+        _storeName       = SettingsManager.Load().StoreName;
 
         NavigateSalesCommand    = new RelayCommand(() => CurrentView = SalesVM);
         NavigateProductsCommand = new RelayCommand(() => { CurrentView = ProductsVM; _ = ProductsVM.LoadProductsAsync(); });
@@ -233,6 +255,7 @@ public class MainViewModel : BaseViewModel
             if (success) 
                 System.Windows.MessageBox.Show("Sinxronizatsiya muvaffaqiyatli yakunlandi!", "Sync", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         });
+        ToggleSidebarCommand    = new RelayCommand(() => IsSidebarExpanded = !IsSidebarExpanded);
     }
 
     public async Task InitializeAsync()

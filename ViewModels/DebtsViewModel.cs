@@ -34,11 +34,13 @@ public class DebtsViewModel : BaseViewModel
     }
 
     public ICommand PayDebtCommand { get; }
+    public ICommand UpdateTermCommand { get; }
 
     public DebtsViewModel(ICustomerService customerService)
     {
         _customerService = customerService;
         PayDebtCommand = new AsyncRelayCommand(PayDebtAsync, () => SelectedCustomer != null && PaymentAmount > 0);
+        UpdateTermCommand = new AsyncRelayCommand(UpdateTermAsync, () => SelectedCustomer != null);
 
         _ = LoadDebtorsAsync();
     }
@@ -100,6 +102,20 @@ public class DebtsViewModel : BaseViewModel
             {
                 SelectedCustomer = updatedCustomer;
             }
+        });
+    }
+
+    private async Task UpdateTermAsync()
+    {
+        if (SelectedCustomer == null) return;
+        await RunAsync(async () =>
+        {
+            await _customerService.UpdateDebtTermAsync(SelectedCustomer.Id, SelectedCustomer.DebtTermDays);
+            SetStatus("Qarz muddati yangilandi");
+            
+            var id = SelectedCustomer.Id;
+            await LoadDebtorsAsync();
+            SelectedCustomer = Debtors.FirstOrDefault(c => c.Id == id);
         });
     }
 }

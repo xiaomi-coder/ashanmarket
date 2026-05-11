@@ -8,12 +8,15 @@ public static class ReceiptGenerator
 {
     private const int Width = 42;
 
-    public static string GenerateText(Sale sale, string storeName = "SUPERMARKET POS")
+    public static string GenerateText(Sale sale, string? storeName = null)
     {
         var sb = new StringBuilder();
 
+        // Read store name if not provided
+        var receiptHeader = storeName ?? Services.SettingsManager.Load().StoreName.Replace("🛒", "").Trim().ToUpper();
+
         // Header
-        sb.AppendLine(Center(storeName));
+        sb.AppendLine(Center(receiptHeader));
         sb.AppendLine(Center("Bizning do'konimizga xush kelibsiz!"));
         sb.AppendLine(Repeat('-', Width));
         sb.AppendLine($"Chek №:  {sale.SaleNumber}");
