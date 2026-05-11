@@ -14,7 +14,10 @@ export default function LoginScreen({ navigation }) {
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.content}>
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        style={styles.content}
+      >
         
         <View style={styles.header}>
           <Text style={styles.title}>🛒 ASHAN MARKET</Text>
@@ -75,7 +78,7 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 16,
     color: '#3498DB',
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   form: {
     backgroundColor: '#2C3240',
@@ -91,7 +94,7 @@ const styles = StyleSheet.create({
     color: '#BDC3C7',
     fontSize: 14,
     marginBottom: 8,
-    fontWeight: '500',
+    fontWeight: 'bold',
   },
   input: {
     backgroundColor: '#1E232E',
