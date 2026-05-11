@@ -48,11 +48,27 @@ public class SaleRepository : ISaleRepository
                     VALUES (@SaleId, @ProductId, @ProductName, @Barcode, @UnitPrice, @CostPrice, @Quantity, @Discount)",
                     item, transaction);
 
-                // Decrease stock
-                await conn.ExecuteAsync(@"
-                    UPDATE Products SET Stock = Stock - @Qty 
-                    WHERE Id = @ProductId",
-                    new { Qty = item.Quantity, item.ProductId }, transaction);
+                // Get product to check if it has a Parent
+                var prod = await conn.QuerySingleOrDefaultAsync<Product>(
+                    "SELECT ParentProductId, Multiplier FROM Products WHERE Id = @Id", 
+                    new { Id = item.ProductId }, transaction);
+
+                if (prod != null && prod.ParentProductId.HasValue && prod.ParentProductId.Value > 0)
+                {
+                    // It's a compound product (e.g. Fleyka). Decrement Parent stock.
+                    await conn.ExecuteAsync(@"
+                        UPDATE Products SET Stock = Stock - @TotalQty 
+                        WHERE Id = @ParentId",
+                        new { TotalQty = item.Quantity * prod.Multiplier, ParentId = prod.ParentProductId.Value }, transaction);
+                }
+                else
+                {
+                    // Normal product
+                    await conn.ExecuteAsync(@"
+                        UPDATE Products SET Stock = Stock - @Qty 
+                        WHERE Id = @ProductId",
+                        new { Qty = item.Quantity, item.ProductId }, transaction);
+                }
             }
 
             transaction.Commit();

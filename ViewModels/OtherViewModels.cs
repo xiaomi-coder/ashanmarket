@@ -154,6 +154,7 @@ public class MainViewModel : BaseViewModel
     public ReturnsViewModel            ReturnsVM   { get; }
     public ExpensesViewModel           ExpensesVM  { get; }
     public UserManagementViewModel     UsersVM     { get; }
+    public DebtsViewModel              DebtsVM     { get; }
 
     private BaseViewModel _currentView;
     public BaseViewModel CurrentView
@@ -185,6 +186,7 @@ public class MainViewModel : BaseViewModel
     public ICommand NavigateReturnsCommand    { get; }
     public ICommand NavigateExpensesCommand   { get; }
     public ICommand NavigateUsersCommand      { get; }
+    public ICommand NavigateDebtsCommand      { get; }
     public ICommand BackupCommand           { get; }
     public ICommand ManageShiftCommand      { get; }
     public ICommand SyncCommand             { get; }
@@ -197,6 +199,7 @@ public class MainViewModel : BaseViewModel
         ReturnsViewModel returnsVM,
         ExpensesViewModel expensesVM,
         UserManagementViewModel usersVM,
+        DebtsViewModel debtsVM,
         IProductService productService,
         IAuthService authService,
         IShiftService shiftService,
@@ -209,6 +212,7 @@ public class MainViewModel : BaseViewModel
         ReturnsVM        = returnsVM;
         ExpensesVM       = expensesVM;
         UsersVM          = usersVM;
+        DebtsVM          = debtsVM;
         _productService  = productService;
         _authService     = authService;
         _shiftService    = shiftService;
@@ -221,6 +225,7 @@ public class MainViewModel : BaseViewModel
         NavigateReturnsCommand  = new RelayCommand(() => CurrentView = ReturnsVM);
         NavigateExpensesCommand = new RelayCommand(() => { CurrentView = ExpensesVM; _ = ExpensesVM.LoadExpensesAsync(); });
         NavigateUsersCommand    = new RelayCommand(() => { CurrentView = UsersVM; _ = UsersVM.LoadUsersAsync(); });
+        NavigateDebtsCommand    = new RelayCommand(() => { CurrentView = DebtsVM; _ = DebtsVM.LoadDebtorsAsync(); });
         BackupCommand           = new AsyncRelayCommand(BackupDatabaseAsync);
         ManageShiftCommand      = new AsyncRelayCommand(ManageShiftAsync);
         SyncCommand             = new AsyncRelayCommand(async () => {

@@ -30,6 +30,9 @@
         <DataTemplate DataType="{x:Type vm:ExpensesViewModel}">
             <views:ExpensesView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:DebtsViewModel}">
+            <views:DebtsView/>
+        </DataTemplate>
         <DataTemplate DataType="{x:Type vm:UserManagementViewModel}">
             <views:UserManagementView/>
         </DataTemplate>
@@ -140,6 +143,13 @@
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
                             Command="{Binding NavigateExpensesCommand}"
+                            Margin="0 2"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="📒   Qarzlar"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateDebtsCommand}"
                             Margin="0 2"/>
 
                     <Button Style="{StaticResource BtnNav}"

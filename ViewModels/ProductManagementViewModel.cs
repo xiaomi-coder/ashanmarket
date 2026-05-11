@@ -14,6 +14,7 @@ public class ProductManagementViewModel : BaseViewModel
 
     public ObservableCollection<Product>  Products   { get; } = new();
     public ObservableCollection<Category> Categories { get; } = new();
+    public ObservableCollection<Product>  ParentProducts { get; } = new();
 
     private Product? _selectedProduct;
     public Product? SelectedProduct
@@ -54,6 +55,12 @@ public class ProductManagementViewModel : BaseViewModel
     private Category? _formCategory;
     public Category? FormCategory { get => _formCategory; set => SetProperty(ref _formCategory, value); }
 
+    private Product? _formParentProduct;
+    public Product? FormParentProduct { get => _formParentProduct; set => SetProperty(ref _formParentProduct, value); }
+
+    private string _formMultiplier = "1";
+    public string FormMultiplier { get => _formMultiplier; set => SetProperty(ref _formMultiplier, value); }
+
     private string _searchQuery = string.Empty;
     public string SearchQuery
     {
@@ -64,7 +71,7 @@ public class ProductManagementViewModel : BaseViewModel
     private bool _isEditMode;
     public bool IsEditMode { get => _isEditMode; set => SetProperty(ref _isEditMode, value); }
 
-    public string[] Units { get; } = ["dona", "kg", "litr", "paket", "quti", "shisha", "tuba", "bog'", "metr"];
+    public string[] Units { get; } = ["dona", "kg", "litr", "paket", "quti", "shisha", "tuba", "bog'", "metr", "fleyka", "blok"];
 
     public ICommand SaveProductCommand   { get; }
     public ICommand DeleteProductCommand { get; }
@@ -96,7 +103,13 @@ public class ProductManagementViewModel : BaseViewModel
         {
             var products = await _productService.GetAllAsync();
             Products.Clear();
-            foreach (var p in products) Products.Add(p);
+            ParentProducts.Clear();
+            ParentProducts.Add(new Product { Id = 0, Name = "Yo'q (Bu o'zi asosiy)" });
+            foreach (var p in products) 
+            {
+                Products.Add(p);
+                ParentProducts.Add(p);
+            }
 
             var cats = await _productService.GetCategoriesAsync();
             Categories.Clear();
@@ -141,10 +154,12 @@ public class ProductManagementViewModel : BaseViewModel
                 Name              = FormName.Trim(),
                 Price             = price,
                 CostPrice         = decimal.TryParse(FormCostPrice, out var cost) ? cost : 0,
-                Stock             = int.TryParse(FormStock, out var stock) ? stock : 0,
-                LowStockThreshold = int.TryParse(FormLowStock, out var low) ? low : 10,
+                Stock             = double.TryParse(FormStock, out var stock) ? stock : 0,
+                LowStockThreshold = double.TryParse(FormLowStock, out var low) ? low : 10,
                 CategoryId        = FormCategory?.Id ?? 1,
                 Unit              = FormUnit,
+                ParentProductId   = FormParentProduct?.Id > 0 ? FormParentProduct.Id : null,
+                Multiplier        = double.TryParse(FormMultiplier, out var mult) && mult > 0 ? mult : 1,
                 IsActive          = true
             };
 
@@ -187,6 +202,8 @@ public class ProductManagementViewModel : BaseViewModel
         FormUnit      = p.Unit;
         FormLowStock  = p.LowStockThreshold.ToString();
         FormCategory  = Categories.FirstOrDefault(c => c.Id == p.CategoryId);
+        FormParentProduct = p.ParentProductId.HasValue ? ParentProducts.FirstOrDefault(x => x.Id == p.ParentProductId.Value) : ParentProducts.FirstOrDefault(x => x.Id == 0);
+        FormMultiplier = p.Multiplier.ToString();
         IsEditMode    = true;
     }
 
@@ -200,6 +217,8 @@ public class ProductManagementViewModel : BaseViewModel
         FormUnit      = "dona";
         FormLowStock  = "10";
         FormCategory  = Categories.FirstOrDefault();
+        FormParentProduct = ParentProducts.FirstOrDefault(x => x.Id == 0);
+        FormMultiplier = "1";
         SelectedProduct = null;
         IsEditMode    = false;
     }

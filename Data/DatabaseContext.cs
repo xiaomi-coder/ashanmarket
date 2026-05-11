@@ -53,14 +53,17 @@ CREATE TABLE IF NOT EXISTS Products (
     Name              TEXT    NOT NULL,
     Price             REAL    NOT NULL DEFAULT 0,
     CostPrice         REAL    NOT NULL DEFAULT 0,
-    Stock             INTEGER NOT NULL DEFAULT 0,
-    LowStockThreshold INTEGER NOT NULL DEFAULT 10,
+    Stock             REAL    NOT NULL DEFAULT 0,
+    LowStockThreshold REAL    NOT NULL DEFAULT 10,
     CategoryId        INTEGER NOT NULL DEFAULT 1,
     Unit              TEXT    NOT NULL DEFAULT 'dona',
     IsActive          INTEGER NOT NULL DEFAULT 1,
+    ParentProductId   INTEGER,
+    Multiplier        REAL    NOT NULL DEFAULT 1,
     CreatedAt         TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
     UpdatedAt         TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
-    FOREIGN KEY (CategoryId) REFERENCES Categories(Id)
+    FOREIGN KEY (CategoryId) REFERENCES Categories(Id),
+    FOREIGN KEY (ParentProductId) REFERENCES Products(Id)
 );
 
 CREATE TABLE IF NOT EXISTS Users (
@@ -100,7 +103,7 @@ CREATE TABLE IF NOT EXISTS SaleItems (
     Barcode     TEXT    NOT NULL DEFAULT '',
     UnitPrice   REAL    NOT NULL DEFAULT 0,
     CostPrice   REAL    NOT NULL DEFAULT 0,
-    Quantity    INTEGER NOT NULL DEFAULT 1,
+    Quantity    REAL    NOT NULL DEFAULT 1,
     Discount    REAL    NOT NULL DEFAULT 0,
     FOREIGN KEY (SaleId)    REFERENCES Sales(Id)    ON DELETE CASCADE,
     FOREIGN KEY (ProductId) REFERENCES Products(Id)
@@ -124,8 +127,21 @@ CREATE TABLE IF NOT EXISTS Customers (
     Phone           TEXT    NOT NULL UNIQUE,
     Name            TEXT    NOT NULL,
     TotalSpent      REAL    NOT NULL DEFAULT 0,
+    DebtBalance     REAL    NOT NULL DEFAULT 0,
     DiscountPercent REAL    NOT NULL DEFAULT 0,
     CreatedAt       TEXT    NOT NULL DEFAULT (datetime('now','localtime'))
+);
+
+CREATE TABLE IF NOT EXISTS DebtTransactions (
+    Id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    CustomerId  INTEGER NOT NULL,
+    Amount      REAL    NOT NULL,
+    Type        TEXT    NOT NULL, -- 'Given', 'Paid'
+    SaleId      INTEGER,
+    Notes       TEXT    DEFAULT '',
+    CreatedAt   TEXT    NOT NULL DEFAULT (datetime('now','localtime')),
+    FOREIGN KEY (CustomerId) REFERENCES Customers(Id),
+    FOREIGN KEY (SaleId) REFERENCES Sales(Id)
 );
 
 CREATE TABLE IF NOT EXISTS Expenses (
@@ -146,21 +162,17 @@ CREATE INDEX IF NOT EXISTS idx_sales_date       ON Sales(CreatedAt);
 CREATE INDEX IF NOT EXISTS idx_saleitems_sale   ON SaleItems(SaleId);
 CREATE INDEX IF NOT EXISTS idx_shifts_status    ON Shifts(Status);
 CREATE INDEX IF NOT EXISTS idx_customers_phone  ON Customers(Phone);
+CREATE INDEX IF NOT EXISTS idx_debt_customer    ON DebtTransactions(CustomerId);
 ";
         using var cmd = conn.CreateCommand();
         cmd.CommandText = schema;
         cmd.ExecuteNonQuery();
 
-        try
-        {
-            using var updateCmd = conn.CreateCommand();
-            updateCmd.CommandText = "ALTER TABLE Sales ADD COLUMN IsSynced INTEGER NOT NULL DEFAULT 0;";
-            updateCmd.ExecuteNonQuery();
-        }
-        catch
-        {
-            // Column already exists
-        }
+        // Migrations
+        try { using var u1 = conn.CreateCommand(); u1.CommandText = "ALTER TABLE Sales ADD COLUMN IsSynced INTEGER NOT NULL DEFAULT 0;"; u1.ExecuteNonQuery(); } catch { }
+        try { using var u2 = conn.CreateCommand(); u2.CommandText = "ALTER TABLE Customers ADD COLUMN DebtBalance REAL NOT NULL DEFAULT 0;"; u2.ExecuteNonQuery(); } catch { }
+        try { using var u3 = conn.CreateCommand(); u3.CommandText = "ALTER TABLE Products ADD COLUMN ParentProductId INTEGER;"; u3.ExecuteNonQuery(); } catch { }
+        try { using var u4 = conn.CreateCommand(); u4.CommandText = "ALTER TABLE Products ADD COLUMN Multiplier REAL NOT NULL DEFAULT 1;"; u4.ExecuteNonQuery(); } catch { }
     }
 
     public string GetDatabasePath()

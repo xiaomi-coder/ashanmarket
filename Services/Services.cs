@@ -199,6 +199,10 @@ public interface ICustomerService
     Task<Customer?> GetByPhoneAsync(string phone);
     Task<Customer> GetOrCreateAsync(string phone, string name, decimal defaultDiscount = 0);
     Task UpdateTotalSpentAsync(int customerId, decimal amount);
+    Task<IEnumerable<Customer>> GetAllWithDebtAsync();
+    Task<IEnumerable<DebtTransaction>> GetDebtTransactionsAsync(int customerId);
+    Task<int> PayDebtAsync(int customerId, decimal amount, string notes = "Qarz to'landi");
+    Task<int> AddDebtAsync(int customerId, decimal amount, int? saleId = null, string notes = "Sotuv orqali qarz");
 }
 
 public class CustomerService : ICustomerService
@@ -230,6 +234,41 @@ public class CustomerService : ICustomerService
     public Task UpdateTotalSpentAsync(int customerId, decimal amount)
     {
         return _customerRepo.UpdateTotalSpentAsync(customerId, amount);
+    }
+
+    public Task<IEnumerable<Customer>> GetAllWithDebtAsync()
+    {
+        return _customerRepo.GetAllWithDebtAsync();
+    }
+
+    public Task<IEnumerable<DebtTransaction>> GetDebtTransactionsAsync(int customerId)
+    {
+        return _customerRepo.GetDebtTransactionsAsync(customerId);
+    }
+
+    public async Task<int> PayDebtAsync(int customerId, decimal amount, string notes = "Qarz to'landi")
+    {
+        var transaction = new DebtTransaction
+        {
+            CustomerId = customerId,
+            Amount = amount,
+            Type = "Paid",
+            Notes = notes
+        };
+        return await _customerRepo.AddDebtTransactionAsync(transaction);
+    }
+
+    public async Task<int> AddDebtAsync(int customerId, decimal amount, int? saleId = null, string notes = "Sotuv orqali qarz")
+    {
+        var transaction = new DebtTransaction
+        {
+            CustomerId = customerId,
+            Amount = amount,
+            Type = "Given",
+            SaleId = saleId,
+            Notes = notes
+        };
+        return await _customerRepo.AddDebtTransactionAsync(transaction);
     }
 }
 
@@ -322,17 +361,35 @@ public interface ISaleService
 public class SaleService : ISaleService
 {
     private readonly ISaleRepository _repo;
+    private readonly ICustomerRepository _customerRepo;
 
-    public SaleService(ISaleRepository repo) => _repo = repo;
+    public SaleService(ISaleRepository repo, ICustomerRepository customerRepo)
+    {
+        _repo = repo;
+        _customerRepo = customerRepo;
+    }
 
     public async Task<int> CompleteSaleAsync(Sale sale)
     {
         if (!sale.Items.Any()) throw new Exception("Sotuv bo'sh bo'lishi mumkin emas!");
-        if (sale.AmountPaid < sale.Total) throw new Exception("To'lov summasi yetarli emas!");
+        
+        // Qarz bo'lmagan to'lovlar uchun summani tekshirish
+        if (sale.PaymentMethod != "Qarz" && sale.AmountPaid < sale.Total) 
+            throw new Exception("To'lov summasi yetarli emas!");
 
         sale.SaleNumber = await _repo.GenerateSaleNumberAsync();
-        sale.Change = sale.AmountPaid - sale.Total;
-        return await _repo.CreateSaleAsync(sale);
+        sale.Change = sale.AmountPaid > sale.Total ? sale.AmountPaid - sale.Total : 0;
+        
+        var saleId = await _repo.CreateSaleAsync(sale);
+
+        // Agar "Qarz" bo'lsa, uni CustomerRepo orqali yozib qo'yamiz
+        if (sale.PaymentMethod == "Qarz")
+        {
+            // Bizda Sale ob'ektida CustomerId yo'q, lekin bu mantiqni ViewModeL da yoki shuyerda hal qilishimiz kerak.
+            // Yaxshisi buni ViewModeldan turib qilamiz, chunki Sale jadvalida CustomerId yo'q.
+        }
+
+        return saleId;
     }
 
     public Task<DailySalesReport> GetDailyReportAsync(DateTime date) => _repo.GetDailyReportAsync(date);

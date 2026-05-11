@@ -198,7 +198,24 @@
                     <ComboBox ItemsSource="{Binding Categories}"
                               SelectedItem="{Binding FormCategory}"
                               DisplayMemberPath="Name"
-                              Margin="0 0 0 20"/>
+                              Margin="0 0 0 12"/>
+
+                    <Border Background="{StaticResource BrushBgDark}" CornerRadius="6" Padding="12" Margin="0 0 0 20">
+                        <StackPanel>
+                            <Label Content="📦 KATTA QADOQ (FLEYKA/BLOK)" FontSize="11" Foreground="{StaticResource BrushTextSec}"/>
+                            
+                            <Label Content="ASOSIY MAHSULOT (DONA)"/>
+                            <ComboBox ItemsSource="{Binding ParentProducts}"
+                                      SelectedItem="{Binding FormParentProduct}"
+                                      DisplayMemberPath="Name"
+                                      Margin="0 0 0 8"/>
+
+                            <Label Content="ICHIDAGI SONI (KO'PAYTUVCHI)"/>
+                            <TextBox Style="{StaticResource TxtBox}"
+                                     Text="{Binding FormMultiplier, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="Fleyka/blok ichida nechta dona bor?"/>
+                        </StackPanel>
+                    </Border>
 
                     <!-- Action buttons -->
                     <Grid>

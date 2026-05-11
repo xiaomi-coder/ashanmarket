@@ -15,11 +15,11 @@ public class CartItem : BaseViewModel
     public decimal UnitPrice { get; set; }
     public decimal CostPrice { get; set; }
 
-    private int _quantity = 1;
-    public int Quantity
+    private double _quantity = 1;
+    public double Quantity
     {
         get => _quantity;
-        set { SetProperty(ref _quantity, value < 1 ? 1 : value); OnPropertyChanged(nameof(Total)); }
+        set { SetProperty(ref _quantity, value <= 0 ? 1 : value); OnPropertyChanged(nameof(Total)); }
     }
 
     private decimal _discount;
@@ -29,7 +29,7 @@ public class CartItem : BaseViewModel
         set { SetProperty(ref _discount, value); OnPropertyChanged(nameof(Total)); }
     }
 
-    public decimal Total => UnitPrice * Quantity - Discount;
+    public decimal Total => UnitPrice * (decimal)Quantity - Discount;
 }
 
 public class SalesViewModel : BaseViewModel
@@ -98,21 +98,29 @@ public class SalesViewModel : BaseViewModel
         private set => SetProperty(ref _total, value);
     }
 
-    private decimal _amountPaid;
-    public decimal AmountPaid
+    private string _amountPaid = "0";
+    public string AmountPaid
     {
         get => _amountPaid;
         set { SetProperty(ref _amountPaid, value); OnPropertyChanged(nameof(Change)); }
     }
 
-    public decimal Change => AmountPaid - Total;
+    public decimal Change => (decimal.TryParse(AmountPaid, out decimal paid) ? paid : 0) - Total;
 
     private string _paymentMethod = "Naqd";
     public string PaymentMethod
     {
         get => _paymentMethod;
-        set => SetProperty(ref _paymentMethod, value);
+        set { SetProperty(ref _paymentMethod, value); OnPropertyChanged(nameof(IsQarz)); }
     }
+
+    public bool IsQarz => PaymentMethod == "Qarz";
+
+    private string _customerPhone = string.Empty;
+    public string CustomerPhone { get => _customerPhone; set => SetProperty(ref _customerPhone, value); }
+
+    private string _customerName = string.Empty;
+    public string CustomerName { get => _customerName; set => SetProperty(ref _customerName, value); }
 
     private CartItem? _selectedItem;
     public CartItem? SelectedItem
@@ -135,12 +143,7 @@ public class SalesViewModel : BaseViewModel
         set => SetProperty(ref _showReceipt, value);
     }
 
-    private string _customerPhone = string.Empty;
-    public string CustomerPhone
-    {
-        get => _customerPhone;
-        set => SetProperty(ref _customerPhone, value);
-    }
+
 
     private Customer? _currentCustomer;
     public Customer? CurrentCustomer
@@ -160,6 +163,7 @@ public class SalesViewModel : BaseViewModel
     public ICommand CompleteSaleCommand { get; }
     public ICommand ClearCartCommand { get; }
     public ICommand SetAmountExactCommand { get; }
+    public ICommand SetPaymentMethodCommand { get; }
     public ICommand CloseReceiptCommand { get; }
     public ICommand SelectCategoryCommand { get; }
     public ICommand HoldCartCommand { get; }
@@ -187,7 +191,16 @@ public class SalesViewModel : BaseViewModel
         DecreaseQtyCommand   = new RelayCommand<CartItem>(item => { if (item != null && item.Quantity > 1) { item.Quantity--; RecalculateTotals(); } });
         CompleteSaleCommand  = new AsyncRelayCommand(CompleteSaleAsync, () => CartItems.Any() && Total > 0);
         ClearCartCommand     = new RelayCommand(ClearCart);
-        SetAmountExactCommand = new RelayCommand(() => { AmountPaid = Total; });
+        SetAmountExactCommand = new RelayCommand(() => { AmountPaid = Total.ToString(); });
+        SetPaymentMethodCommand = new RelayCommand<string>(method => 
+        {
+            if (method != null) 
+            {
+                PaymentMethod = method;
+                if (method == "Qarz") AmountPaid = "0";
+                else AmountPaid = Total.ToString();
+            }
+        });
         CloseReceiptCommand  = new RelayCommand(() => ShowReceipt = false);
         SelectCategoryCommand = new RelayCommand<Category>(c => SelectedCategory = c);
         HoldCartCommand      = new RelayCommand(HoldCart);
@@ -202,6 +215,7 @@ public class SalesViewModel : BaseViewModel
         {
             var cats = await _productService.GetCategoriesAsync();
             Categories.Clear();
+            Categories.Add(new Category { Id = 0, Name = "Barchasi", Description = "Barcha mahsulotlar" });
             foreach (var c in cats) Categories.Add(c);
             if (Categories.Any()) SelectedCategory = Categories.First();
         });
@@ -213,7 +227,9 @@ public class SalesViewModel : BaseViewModel
         await RunAsync(async () =>
         {
             var allProducts = await _productService.GetAllAsync();
-            var catProds = allProducts.Where(p => p.CategoryId == SelectedCategory.Id);
+            var catProds = SelectedCategory.Id == 0 
+                ? allProducts 
+                : allProducts.Where(p => p.CategoryId == SelectedCategory.Id);
             CategoryProducts.Clear();
             foreach (var p in catProds) CategoryProducts.Add(p);
         });
@@ -281,7 +297,7 @@ public class SalesViewModel : BaseViewModel
     {
         CartItems.Clear();
         Discount = 0;
-        AmountPaid = 0;
+        AmountPaid = "0";
         SearchQuery = string.Empty;
         SearchResults.Clear();
         CurrentCustomer = null;
@@ -372,7 +388,7 @@ public class SalesViewModel : BaseViewModel
     private async Task CompleteSaleAsync()
     {
         if (!CartItems.Any()) return;
-        if (AmountPaid < Total)
+        if ((!decimal.TryParse(AmountPaid, out decimal ap) || ap < Total) && PaymentMethod != "Qarz")
         {
             SetStatus("To'lov summasi yetarli emas!", true);
             return;
@@ -387,7 +403,7 @@ public class SalesViewModel : BaseViewModel
                 SubTotal    = SubTotal,
                 Discount    = Discount,
                 Total       = Total,
-                AmountPaid  = AmountPaid,
+                AmountPaid  = decimal.TryParse(AmountPaid, out decimal ap) ? ap : 0,
                 Change      = Change,
                 PaymentMethod = PaymentMethod,
                 Items = CartItems.Select(c => new SaleItem
@@ -405,10 +421,28 @@ public class SalesViewModel : BaseViewModel
             var saleId = await _saleService.CompleteSaleAsync(sale);
             sale.Id = saleId;
 
-            if (CurrentCustomer != null)
+            // Agar Qarz ga sotilgan bo'lsa
+            if (PaymentMethod == "Qarz")
             {
-                await _customerService.GetOrCreateAsync(CurrentCustomer.Phone, CurrentCustomer.Name); // Just to ensure it exists
-                await _customerService.UpdateTotalSpentAsync(CurrentCustomer.Id, sale.Total);
+                if (string.IsNullOrWhiteSpace(CustomerPhone) || string.IsNullOrWhiteSpace(CustomerName))
+                {
+                    throw new Exception("Qarzga berish uchun mijozning ism va raqami kiritilishi shart!");
+                }
+
+                var customer = await _customerService.GetOrCreateAsync(CustomerPhone, CustomerName);
+                await _customerService.UpdateTotalSpentAsync(customer.Id, sale.Total);
+
+                decimal qarzdorlik = sale.Total - sale.AmountPaid; // Agar bir qismini to'lab, qolgani qarz bo'lsa
+                if (qarzdorlik > 0)
+                {
+                    await _customerService.AddDebtAsync(customer.Id, qarzdorlik, sale.Id, $"Sotuv #{sale.SaleNumber}");
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(CustomerPhone))
+            {
+                // Qarz bo'lmasa ham mijoz kiritilgan bo'lsa, statistika uchun qo'shamiz
+                var customer = await _customerService.GetOrCreateAsync(CustomerPhone, string.IsNullOrWhiteSpace(CustomerName) ? "Mijoz" : CustomerName);
+                await _customerService.UpdateTotalSpentAsync(customer.Id, sale.Total);
             }
 
             // Chekni printerga chiqarish

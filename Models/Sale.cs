@@ -28,10 +28,10 @@ public class SaleItem
     public string Barcode { get; set; } = string.Empty;
     public decimal UnitPrice { get; set; }
     public decimal CostPrice { get; set; }
-    public int Quantity { get; set; }
+    public double Quantity { get; set; }
     public decimal Discount { get; set; }
-    public decimal Total => UnitPrice * Quantity - Discount;
-    public decimal Profit => (UnitPrice - CostPrice) * Quantity;
+    public decimal Total => UnitPrice * (decimal)Quantity - Discount;
+    public decimal Profit => (UnitPrice - CostPrice) * (decimal)Quantity;
 }
 
 public class User

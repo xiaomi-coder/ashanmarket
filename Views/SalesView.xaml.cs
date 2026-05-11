@@ -87,7 +87,36 @@ public partial class SalesView : UserControl
         if (sender is Button btn && decimal.TryParse(btn.Tag?.ToString(), out var amount))
         {
             if (DataContext is SalesViewModel vm)
-                vm.AmountPaid = amount;
+                vm.AmountPaid = amount.ToString();
+        }
+    }
+
+    private void Numpad_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag != null && DataContext is SalesViewModel vm)
+        {
+            string tag = btn.Tag.ToString() ?? "";
+            string current = vm.AmountPaid;
+            if (current == "0") current = "";
+
+            if (tag == "BACK")
+            {
+                if (current.Length > 0)
+                {
+                    current = current.Substring(0, current.Length - 1);
+                }
+            }
+            else
+            {
+                current += tag;
+            }
+
+            if (string.IsNullOrEmpty(current)) current = "0";
+
+            if (decimal.TryParse(current, out _))
+            {
+                vm.AmountPaid = current;
+            }
         }
     }
 
