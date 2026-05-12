@@ -98,6 +98,9 @@ public class ReportsViewModel : BaseViewModel
 public class LoginViewModel : BaseViewModel
 {
     private readonly IAuthService _authService;
+    private readonly ISyncService _syncService;
+
+    public bool IsFirstRun { get; }
 
     private string _username = string.Empty;
     public string Username { get => _username; set => SetProperty(ref _username, value); }
@@ -105,15 +108,26 @@ public class LoginViewModel : BaseViewModel
     private string _password = string.Empty;
     public string Password { get => _password; set => SetProperty(ref _password, value); }
 
+    private string _cloudSlug = string.Empty;
+    public string CloudSlug { get => _cloudSlug; set => SetProperty(ref _cloudSlug, value); }
+
+    private string _backendApiUrl = "http://sotuvpos.uz/api";
+    public string BackendApiUrl { get => _backendApiUrl; set => SetProperty(ref _backendApiUrl, value); }
+
     public bool LoginSuccess { get; private set; }
 
     public ICommand LoginCommand { get; }
 
     public event Action? OnLoginSuccess;
 
-    public LoginViewModel(IAuthService authService)
+    public LoginViewModel(IAuthService authService, ISyncService syncService)
     {
         _authService = authService;
+        _syncService = syncService;
+
+        var settings = SettingsManager.Load();
+        IsFirstRun = string.IsNullOrEmpty(settings.ApiKey);
+
         LoginCommand = new AsyncRelayCommand(LoginAsync);
     }
 
@@ -121,23 +135,67 @@ public class LoginViewModel : BaseViewModel
     {
         if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrWhiteSpace(Password))
         {
-            SetStatus("Foydalanuvchi nomi va parol kiritilishi shart!", true);
+            SetStatus("Barcha maydonlarni to'ldiring!", true);
             return;
         }
 
-        await RunAsync(async () =>
+        if (IsFirstRun)
         {
-            var user = await _authService.LoginAsync(Username, Password);
-            if (user == null)
+            if (string.IsNullOrWhiteSpace(CloudSlug) || string.IsNullOrWhiteSpace(BackendApiUrl))
             {
-                SetStatus("Noto'g'ri foydalanuvchi nomi yoki parol!", true);
+                SetStatus("Do'kon kodi va API URL kiritilishi shart!", true);
                 return;
             }
 
-            LoginSuccess = true;
-            SetStatus($"Xush kelibsiz, {user.FullName}!");
-            OnLoginSuccess?.Invoke();
-        });
+            await RunAsync(async () =>
+            {
+                var settings = SettingsManager.Load();
+                settings.BackendApiUrl = BackendApiUrl;
+                settings.CloudSlug = CloudSlug;
+                settings.CloudUsername = Username;
+                SettingsManager.Save(settings);
+
+                bool authSuccess = await _syncService.AuthenticateCloudAsync(Password);
+                if (!authSuccess)
+                {
+                    SetStatus("Bulutga ulanishda xatolik! Ma'lumotlarni tekshiring.", true);
+                    return;
+                }
+
+                SetStatus("Bulutga ulandi! Ma'lumotlar yuklanmoqda...");
+                
+                // Initial Sync to pull users and data
+                await _syncService.SyncSalesAsync();
+
+                // Now try local login
+                var user = await _authService.LoginAsync(Username, Password);
+                if (user == null)
+                {
+                    SetStatus("Sinxronizatsiya tugadi, lekin foydalanuvchi topilmadi.", true);
+                    return;
+                }
+
+                LoginSuccess = true;
+                SetStatus($"Xush kelibsiz, {user.FullName}!");
+                OnLoginSuccess?.Invoke();
+            });
+        }
+        else
+        {
+            await RunAsync(async () =>
+            {
+                var user = await _authService.LoginAsync(Username, Password);
+                if (user == null)
+                {
+                    SetStatus("Noto'g'ri foydalanuvchi nomi yoki parol!", true);
+                    return;
+                }
+
+                LoginSuccess = true;
+                SetStatus($"Xush kelibsiz, {user.FullName}!");
+                OnLoginSuccess?.Invoke();
+            });
+        }
     }
 }
 
@@ -157,6 +215,7 @@ public class MainViewModel : BaseViewModel
     public ExpensesViewModel           ExpensesVM  { get; }
     public UserManagementViewModel     UsersVM     { get; }
     public DebtsViewModel              DebtsVM     { get; }
+    public SettingsViewModel           SettingsVM  { get; }
 
     private BaseViewModel _currentView;
     public BaseViewModel CurrentView
@@ -172,19 +231,7 @@ public class MainViewModel : BaseViewModel
     public string CurrentUserName { get => _currentUserName; set => SetProperty(ref _currentUserName, value); }
 
     private string _storeName = string.Empty;
-    public string StoreName 
-    { 
-        get => _storeName; 
-        set 
-        {
-            if (SetProperty(ref _storeName, value))
-            {
-                var s = SettingsManager.Load();
-                s.StoreName = value;
-                SettingsManager.Save(s);
-            }
-        }
-    }
+    public string StoreName { get => _storeName; set => SetProperty(ref _storeName, value); }
 
     private bool _isAdmin;
     public bool IsAdmin { get => _isAdmin; set => SetProperty(ref _isAdmin, value); }
@@ -211,6 +258,7 @@ public class MainViewModel : BaseViewModel
     public ICommand ManageShiftCommand      { get; }
     public ICommand SyncCommand             { get; }
     public ICommand ToggleSidebarCommand    { get; }
+    public ICommand NavigateSettingsCommand { get; }
 
     public MainViewModel(
         SalesViewModel salesVM,
@@ -221,6 +269,7 @@ public class MainViewModel : BaseViewModel
         ExpensesViewModel expensesVM,
         UserManagementViewModel usersVM,
         DebtsViewModel debtsVM,
+        SettingsViewModel settingsVM,
         IProductService productService,
         IAuthService authService,
         IShiftService shiftService,
@@ -234,11 +283,14 @@ public class MainViewModel : BaseViewModel
         ExpensesVM       = expensesVM;
         UsersVM          = usersVM;
         DebtsVM          = debtsVM;
+        SettingsVM       = settingsVM;
         _productService  = productService;
         _authService     = authService;
         _shiftService    = shiftService;
         _currentView     = salesVM;
         _storeName       = SettingsManager.Load().StoreName;
+        
+        SettingsVM.OnSettingsSaved += () => StoreName = SettingsManager.Load().StoreName;
 
         NavigateSalesCommand    = new RelayCommand(() => CurrentView = SalesVM);
         NavigateProductsCommand = new RelayCommand(() => { CurrentView = ProductsVM; _ = ProductsVM.LoadProductsAsync(); });
@@ -256,6 +308,7 @@ public class MainViewModel : BaseViewModel
                 System.Windows.MessageBox.Show("Sinxronizatsiya muvaffaqiyatli yakunlandi!", "Sync", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         });
         ToggleSidebarCommand    = new RelayCommand(() => IsSidebarExpanded = !IsSidebarExpanded);
+        NavigateSettingsCommand = new RelayCommand(() => CurrentView = SettingsVM);
     }
 
     public async Task InitializeAsync()

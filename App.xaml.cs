@@ -93,6 +93,7 @@ public partial class App : Application
         services.AddSingleton<ExpensesViewModel>();
         services.AddSingleton<DebtsViewModel>();
         services.AddSingleton<UserManagementViewModel>();
+        services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainViewModel>();
     }
 }

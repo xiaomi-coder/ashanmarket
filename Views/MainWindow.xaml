@@ -38,6 +38,9 @@
         <DataTemplate DataType="{x:Type vm:UserManagementViewModel}">
             <views:UserManagementView/>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:SettingsViewModel}">
+            <views:SettingsView/>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -189,6 +192,14 @@
                             HorizontalAlignment="Stretch"
                             HorizontalContentAlignment="Left"
                             Command="{Binding NavigateReportsCommand}"
+                            Margin="0 2"
+                            Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
+
+                    <Button Style="{StaticResource BtnNav}"
+                            Content="⚙️   Sozlamalar"
+                            HorizontalAlignment="Stretch"
+                            HorizontalContentAlignment="Left"
+                            Command="{Binding NavigateSettingsCommand}"
                             Margin="0 2"
                             Visibility="{Binding IsAdmin, Converter={StaticResource BoolVis}}"/>
                 </StackPanel>

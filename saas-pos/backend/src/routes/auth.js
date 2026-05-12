@@ -57,7 +57,8 @@ router.post('/login', async (req, res) => {
         name: tenant.name,
         slug: tenant.slug,
         logoUrl: tenant.logoUrl,
-        expiresAt: tenant.expiresAt
+        expiresAt: tenant.expiresAt,
+        apiKey: tenant.apiKey
       }
     })
   } catch (err) {

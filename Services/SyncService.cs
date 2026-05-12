@@ -10,22 +10,19 @@ namespace SupermarketPOS.Services;
 public interface ISyncService
 {
     Task<bool> SyncSalesAsync();
+    Task<bool> AuthenticateCloudAsync(string password);
 }
 
 public class SyncService : ISyncService
 {
     private readonly ISaleRepository _saleRepo;
     private readonly HttpClient _httpClient;
-
-    // TODO: Bularni kelajakda sozlamalardan (Settings) olinadigan qilish kerak.
-    private const string BackendApiUrl = "http://localhost:5000/api/sales/sync";
-    private const string ApiKey = "YOUR_TENANT_API_KEY";
-
-    public SyncService(ISaleRepository saleRepo)
+    private readonly IUserRepository _userRepo;
+    public SyncService(ISaleRepository saleRepo, IUserRepository userRepo)
     {
         _saleRepo = saleRepo;
+        _userRepo = userRepo;
         _httpClient = new HttpClient();
-        _httpClient.DefaultRequestHeaders.Add("x-api-key", ApiKey);
     }
 
     public async Task<bool> SyncSalesAsync()
@@ -40,6 +37,17 @@ public class SyncService : ISyncService
                 Debug.WriteLine("Sinxronizatsiya uchun yangi sotuvlar yo'q.");
                 return true;
             }
+
+            var settings = SettingsManager.Load();
+            if (string.IsNullOrWhiteSpace(settings.BackendApiUrl) || string.IsNullOrWhiteSpace(settings.ApiKey))
+            {
+                Debug.WriteLine("Cloud Settings (API URL yoki API Key) kiritilmagan. Sinxronizatsiya bekor qilindi.");
+                return false;
+            }
+
+            string syncUrl = $"{settings.BackendApiUrl.TrimEnd('/')}/sales/sync";
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", settings.ApiKey);
 
             // Backend formatiga moslash
             var payload = new
@@ -68,7 +76,7 @@ public class SyncService : ISyncService
                 }).ToList()
             };
 
-            var response = await _httpClient.PostAsJsonAsync(BackendApiUrl, payload);
+            var response = await _httpClient.PostAsJsonAsync(syncUrl, payload);
 
             if (response.IsSuccessStatusCode)
             {
@@ -90,6 +98,61 @@ public class SyncService : ISyncService
         catch (Exception ex)
         {
             Debug.WriteLine($"Sinxronizatsiya jarayonida xatolik yuz berdi: {ex}");
+            return false;
+        }
+    }
+
+    public async Task<bool> AuthenticateCloudAsync(string password)
+    {
+        try
+        {
+            var settings = SettingsManager.Load();
+            if (string.IsNullOrWhiteSpace(settings.BackendApiUrl) || string.IsNullOrWhiteSpace(settings.CloudSlug))
+                return false;
+
+            var loginUrl = $"{settings.BackendApiUrl.TrimEnd('/')}/auth/login";
+            var payload = new
+            {
+                slug = settings.CloudSlug,
+                username = settings.CloudUsername,
+                password = password
+            };
+
+            var response = await _httpClient.PostAsJsonAsync(loginUrl, payload);
+            if (!response.IsSuccessStatusCode) return false;
+
+            var content = await response.Content.ReadFromJsonAsync<JsonElement>();
+            var tenant = content.GetProperty("tenant");
+            
+            if (tenant.TryGetProperty("apiKey", out var apiKeyElement) && apiKeyElement.ValueKind == JsonValueKind.String)
+            {
+                settings.ApiKey = apiKeyElement.GetString();
+                settings.StoreName = tenant.GetProperty("name").GetString() ?? "Do'kon";
+                SettingsManager.Save(settings);
+
+                // Create the user locally so they can log in
+                var cloudUser = content.GetProperty("user");
+                var uName = cloudUser.GetProperty("username").GetString();
+                var fName = cloudUser.GetProperty("fullName").GetString();
+                var role = cloudUser.GetProperty("role").GetString() == "admin" ? "Admin" : "Cashier";
+
+                // Save to local SQLite
+                await _userRepo.AddAsync(new User
+                {
+                    Username = uName ?? settings.CloudUsername,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(password),
+                    FullName = fName ?? "Administrator",
+                    Role = role,
+                    IsActive = true
+                });
+
+                return true;
+            }
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Cloud auth failed: {ex}");
             return false;
         }
     }

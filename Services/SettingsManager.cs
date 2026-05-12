@@ -6,6 +6,12 @@ namespace SupermarketPOS.Services;
 public class AppSettings
 {
     public string StoreName { get; set; } = "🛒 SuperMarket";
+    
+    // Cloud Sync Settings
+    public string BackendApiUrl { get; set; } = "https://sotuvpos.uz/api";
+    public string CloudSlug { get; set; } = "";
+    public string CloudUsername { get; set; } = "";
+    public string ApiKey { get; set; } = "";
 }
 
 public static class SettingsManager

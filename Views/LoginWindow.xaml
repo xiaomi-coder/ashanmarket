@@ -9,6 +9,10 @@
         Background="Transparent"
         ResizeMode="NoResize">
 
+    <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolVis"/>
+    </Window.Resources>
+
     <Border CornerRadius="12" Background="{StaticResource BrushBgMid}"
             BorderBrush="{StaticResource BrushBorder}" BorderThickness="1">
         <Grid>
@@ -45,7 +49,16 @@
                            FontSize="13"
                            Foreground="{StaticResource BrushTextSec}"
                            HorizontalAlignment="Center"
-                           Margin="0 4 0 32"/>
+                           Margin="0 4 0 24"/>
+
+                <!-- Cloud Setup Fields -->
+                <StackPanel Visibility="{Binding IsFirstRun, Converter={StaticResource BoolVis}}">
+                    <Label Content="DO'KON KODI (SLUG)" Margin="0 0 0 4"/>
+                    <TextBox Style="{StaticResource TxtBox}"
+                             Text="{Binding CloudSlug, UpdateSourceTrigger=PropertyChanged}"
+                             Margin="0 0 0 16"
+                             KeyDown="Input_KeyDown"/>
+                </StackPanel>
 
                 <!-- Username -->
                 <Label Content="FOYDALANUVCHI NOMI" Margin="0 0 0 4"/>
@@ -82,12 +95,8 @@
                         CommandParameter="{Binding ElementName=PasswordBox}"
                         Click="LoginButton_Click"/>
 
-                <TextBlock Text="admin / admin123  •  kassir / kassir123"
-                           FontSize="11"
-                           Foreground="{StaticResource BrushTextSec}"
-                           HorizontalAlignment="Center"
-                           Margin="0 16 0 0"
-                           Opacity="0.6"/>
+                <!-- Spinner -->
+                <ProgressBar IsIndeterminate="True" Height="4" Margin="0,16,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BoolVis}}"/>
             </StackPanel>
         </Grid>
     </Border>
