@@ -1,12 +1,12 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
-import { authenticateToken } from '../middleware/auth.js'
+import { authMiddleware } from '../middleware/auth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
 
 // Qarzdorlarni yuklash
-router.get('/', authenticateToken, async (req, res) => {
+router.get('/', authMiddleware, async (req, res) => {
   try {
     const customers = await prisma.customer.findMany({
       where: { tenantId: req.user.tenantId, totalDebt: { gt: 0 } },
@@ -20,7 +20,7 @@ router.get('/', authenticateToken, async (req, res) => {
 })
 
 // Qarz qo'shish yoki to'lash
-router.post('/', authenticateToken, async (req, res) => {
+router.post('/', authMiddleware, async (req, res) => {
   try {
     const { name, phone, amount, type } = req.body // type: 'borrow' yoki 'repay'
 

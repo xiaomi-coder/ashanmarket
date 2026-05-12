@@ -8,12 +8,12 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://sotuvpos.uz/api"
+        "EXPO_PUBLIC_API_URL": "https://sotuvpos.uz/api"
       }
     },
     "production": {
       "env": {
-        "EXPO_PUBLIC_API_URL": "http://sotuvpos.uz/api"
+        "EXPO_PUBLIC_API_URL": "https://sotuvpos.uz/api"
       }
     }
   }
