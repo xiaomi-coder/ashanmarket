@@ -1,14 +1,27 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useContext } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, SafeAreaView, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import { AuthContext } from '../context/AuthContext';
 
-export default function LoginScreen({ navigation }) {
+export default function LoginScreen() {
+  const [slug, setSlug] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const { login } = useContext(AuthContext);
+  const [localLoading, setLocalLoading] = useState(false);
 
-  const handleLogin = () => {
-    // For now, bypass actual API authentication
-    navigation.replace('Dashboard');
+  const handleLogin = async () => {
+    if (!slug || !username || !password) {
+      Alert.alert("Xato", "Barcha maydonlarni to'ldiring!");
+      return;
+    }
+    setLocalLoading(true);
+    const res = await login(slug, username, password);
+    setLocalLoading(false);
+    
+    if (!res.success) {
+      Alert.alert("Xatolik", res.message);
+    }
   };
 
   return (
@@ -25,6 +38,16 @@ export default function LoginScreen({ navigation }) {
         </View>
 
         <View style={styles.form}>
+          <Text style={styles.label}>Do'kon Kodi (Slug)</Text>
+          <TextInput 
+            style={styles.input}
+            placeholder="ashanmarket"
+            placeholderTextColor="#7F8C8D"
+            value={slug}
+            onChangeText={setSlug}
+            autoCapitalize="none"
+          />
+
           <Text style={styles.label}>Loginingiz</Text>
           <TextInput 
             style={styles.input}
@@ -45,8 +68,12 @@ export default function LoginScreen({ navigation }) {
             onChangeText={setPassword}
           />
 
-          <TouchableOpacity style={styles.button} onPress={handleLogin}>
-            <Text style={styles.buttonText}>Tizimga kirish</Text>
+          <TouchableOpacity style={styles.button} onPress={handleLogin} disabled={localLoading}>
+            {localLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.buttonText}>Tizimga kirish</Text>
+            )}
           </TouchableOpacity>
         </View>
         

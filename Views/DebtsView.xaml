@@ -33,11 +33,16 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto"/>
                         <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
                     </Grid.RowDefinitions>
                     
-                    <TextBlock Text="Qarzdor Mijozlar" FontSize="18" FontWeight="SemiBold" Margin="0 0 0 16" Foreground="{StaticResource BrushTextPrimary}"/>
+                    <StackPanel Margin="0 0 0 16">
+                        <TextBlock Text="Qarzdor Mijozlar" FontSize="18" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0 0 0 12"/>
+                        <TextBox Text="{Binding SearchQuery, UpdateSourceTrigger=PropertyChanged}" 
+                                 Style="{StaticResource TxtBox}" Tag="🔍 Ism yoki raqam bo'yicha qidiruv" ToolTip="Qidiruv"/>
+                    </StackPanel>
                     
-                    <ListBox Grid.Row="1" ItemsSource="{Binding Debtors}" SelectedItem="{Binding SelectedCustomer}"
+                    <ListBox Grid.Row="1" ItemsSource="{Binding FilteredDebtors}" SelectedItem="{Binding SelectedCustomer}"
                              Background="Transparent" BorderThickness="0"
                              ScrollViewer.HorizontalScrollBarVisibility="Disabled">
                         <ListBox.ItemContainerStyle>
@@ -103,6 +108,47 @@
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListBox>
+
+                    <!-- Add New Debt Section -->
+                    <Border Grid.Row="2" Margin="0 16 0 0" Padding="12" Background="#FF1F2437" CornerRadius="8" BorderThickness="1" BorderBrush="#FF2E3460">
+                        <StackPanel>
+                            <TextBlock Text="Yangi Qarz Kiritish" FontSize="14" FontWeight="SemiBold" Foreground="{StaticResource BrushTextPrimary}" Margin="0 0 0 12"/>
+                            
+                            <Grid Margin="0 0 0 8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Telefon raqami (masalan: 998901234567)" FontSize="11" Foreground="{StaticResource BrushTextSec}" Margin="0 0 0 4"/>
+                                    <TextBox Text="{Binding NewCustomerPhone, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TxtBox}"/>
+                                </StackPanel>
+                                
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="Mijoz ismi" FontSize="11" Foreground="{StaticResource BrushTextSec}" Margin="0 0 0 4"/>
+                                    <TextBox Text="{Binding NewCustomerName, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TxtBox}"/>
+                                </StackPanel>
+                            </Grid>
+                            
+                            <Grid Margin="0 0 0 12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="8"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="Qarz summasi (so'm)" FontSize="11" Foreground="{StaticResource BrushTextSec}" Margin="0 0 0 4"/>
+                                    <TextBox Text="{Binding NewDebtAmount, UpdateSourceTrigger=PropertyChanged}" Style="{StaticResource TxtBox}"/>
+                                </StackPanel>
+                                
+                                <Button Grid.Column="2" Content="QO'SHISH" Command="{Binding AddDebtCommand}" Width="100" Height="40" VerticalAlignment="Bottom"
+                                        Style="{StaticResource BtnAccent}" FontSize="12" FontWeight="Bold"/>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </Grid>
             </Border>
 
@@ -131,7 +177,9 @@
                     <Grid Grid.Row="1" Margin="0 0 0 20">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
-                            <ColumnDefinition Width="20"/>
+                            <ColumnDefinition Width="10"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="10"/>
                             <ColumnDefinition Width="*"/>
                         </Grid.ColumnDefinitions>
                         
@@ -154,8 +202,27 @@
                             </StackPanel>
                         </Border>
 
-                        <!-- Term Section -->
+                        <!-- Add Debt Section -->
                         <Border Grid.Column="2" Background="#FF1F2437" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="#FF2E3460">
+                            <StackPanel>
+                                <TextBlock Text="Qarz Qo'shish:" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
+                                <TextBlock Text="➕" FontSize="24" Margin="0 4 0 16" Foreground="{StaticResource BrushTextSec}"/>
+                                
+                                <TextBlock Text="Qo'shiladigan summa:" FontSize="13" Foreground="{StaticResource BrushTextSec}" Margin="0 0 0 4"/>
+                                <TextBox Text="{Binding SelectedCustomerAddDebtAmount, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Padding="8" Background="#FF1A1F2E" Foreground="White" BorderBrush="#FF2E3460" Margin="0 0 0 12"/>
+                                
+                                <Button Content="QARZ QO'SHISH" Command="{Binding AddDebtToSelectedCommand}" Height="40" FontSize="14" FontWeight="Bold" Background="#FFFF4757" Foreground="White">
+                                    <Button.Resources>
+                                        <Style TargetType="Border">
+                                            <Setter Property="CornerRadius" Value="6"/>
+                                        </Style>
+                                    </Button.Resources>
+                                </Button>
+                            </StackPanel>
+                        </Border>
+
+                        <!-- Term Section -->
+                        <Border Grid.Column="4" Background="#FF1F2437" CornerRadius="8" Padding="16" BorderThickness="1" BorderBrush="#FF2E3460">
                             <StackPanel>
                                 <TextBlock Text="Qarz muddati (kun):" FontSize="14" Foreground="{StaticResource BrushTextSec}"/>
                                 <TextBox Text="{Binding SelectedCustomer.DebtTermDays, UpdateSourceTrigger=PropertyChanged}" FontSize="18" Padding="8" Background="#FF1A1F2E" Foreground="White" BorderBrush="#FF2E3460" Margin="0 4 0 16"/>

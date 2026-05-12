@@ -1,12 +1,11 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform, Modal, Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform, Modal, Alert, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import api from '../config/api';
 
 export default function DebtsScreen({ navigation }) {
-  const [debts, setDebts] = useState([
-    { id: '1', name: 'Sardor aka (Qo\'shni)', amount: 250000, phone: '+998901234567', isOverdue: true, date: '05 May 2026' },
-    { id: '2', name: 'Nodirbek', amount: 45000, phone: '+998939876543', isOverdue: false, date: '11 May 2026' },
-  ]);
+  const [debts, setDebts] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const [newName, setNewName] = useState('');
   const [newPhone, setNewPhone] = useState('');
@@ -18,77 +17,99 @@ export default function DebtsScreen({ navigation }) {
   const [selectedDebt, setSelectedDebt] = useState(null);
   const [paymentAmount, setPaymentAmount] = useState('');
 
-  const addDebt = () => {
+  useEffect(() => {
+    fetchDebts();
+  }, []);
+
+  const fetchDebts = async () => {
+    try {
+      const response = await api.get('/debts');
+      setDebts(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addDebt = async () => {
     if (newName.trim() && newAmount.trim()) {
-      setDebts([
-        { 
-          id: Date.now().toString(), 
-          name: newName, 
-          amount: parseInt(newAmount), 
-          phone: newPhone, 
-          isOverdue: false, 
-          date: 'Hozir' 
-        },
-        ...debts
-      ]);
-      setNewName('');
-      setNewPhone('');
-      setNewAmount('');
-      setNewNotes('');
+      try {
+        await api.post('/debts', {
+          name: newName,
+          phone: newPhone,
+          amount: newAmount,
+          type: 'borrow'
+        });
+        fetchDebts();
+        setNewName('');
+        setNewPhone('');
+        setNewAmount('');
+        setNewNotes('');
+        Alert.alert("Muvaffaqiyatli", "Qarz yozildi");
+      } catch (error) {
+        Alert.alert("Xatolik", "Qarz qo'shishda xatolik yuz berdi");
+      }
+    } else {
+      Alert.alert("Xatolik", "Ism va summani kiriting");
     }
   };
 
   const openPaymentModal = (debt) => {
     setSelectedDebt(debt);
-    setPaymentAmount(debt.amount.toString());
+    setPaymentAmount(debt.totalDebt.toString());
     setPaymentModalVisible(true);
   };
 
-  const processPayment = () => {
+  const processPayment = async () => {
     const payAmt = parseInt(paymentAmount);
     if (!payAmt || payAmt <= 0) {
       Alert.alert('Xato', 'To\'g\'ri summa kiriting');
       return;
     }
 
-    if (payAmt > selectedDebt.amount) {
+    if (payAmt > selectedDebt.totalDebt) {
       Alert.alert('Xato', 'Kiritilgan summa qarzdan ko\'p!');
       return;
     }
 
-    if (payAmt === selectedDebt.amount) {
-      // Full payment
-      setDebts(debts.filter(d => d.id !== selectedDebt.id));
-    } else {
-      // Partial payment
-      setDebts(debts.map(d => 
-        d.id === selectedDebt.id 
-          ? { ...d, amount: d.amount - payAmt } 
-          : d
-      ));
+    try {
+      await api.post('/debts', {
+        name: selectedDebt.name,
+        amount: payAmt,
+        type: 'repay'
+      });
+      fetchDebts();
+      setPaymentModalVisible(false);
+      setSelectedDebt(null);
+      setPaymentAmount('');
+      Alert.alert("Muvaffaqiyatli", "Qarz to'landi");
+    } catch (error) {
+      Alert.alert("Xatolik", "To'lovni saqlashda xatolik");
     }
-    
-    setPaymentModalVisible(false);
-    setSelectedDebt(null);
-    setPaymentAmount('');
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardInfo}>
-        <View style={styles.nameRow}>
-          <Text style={styles.cardName}>{item.name}</Text>
-          {item.isOverdue && <View style={styles.overdueBadge}><Text style={styles.overdueText}>Kechikkan</Text></View>}
+  const renderItem = ({ item }) => {
+    const isOverdue = false; // Add logic if needed based on dates
+    const d = new Date(item.createdAt);
+    const dateStr = `${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardInfo}>
+          <View style={styles.nameRow}>
+            <Text style={styles.cardName}>{item.name}</Text>
+            {isOverdue && <View style={styles.overdueBadge}><Text style={styles.overdueText}>Kechikkan</Text></View>}
+          </View>
+          <Text style={styles.cardPhone}>{item.phone || "Raqam yo'q"}</Text>
+          <Text style={styles.cardDate}>{dateStr}</Text>
+          <Text style={styles.cardAmount}>{item.totalDebt.toLocaleString('ru-RU')} so'm</Text>
         </View>
-        <Text style={styles.cardPhone}>{item.phone || "Raqam yo'q"}</Text>
-        <Text style={styles.cardDate}>{item.date}</Text>
-        <Text style={styles.cardAmount}>{item.amount.toLocaleString('ru-RU')} so'm</Text>
+        <TouchableOpacity style={styles.payBtn} onPress={() => openPaymentModal(item)}>
+          <Text style={styles.payBtnText}>To'lash</Text>
+        </TouchableOpacity>
       </View>
-      <TouchableOpacity style={styles.payBtn} onPress={() => openPaymentModal(item)}>
-        <Text style={styles.payBtnText}>To'lash</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -108,18 +129,22 @@ export default function DebtsScreen({ navigation }) {
         <View style={styles.statsCard}>
           <Text style={styles.statsLabel}>Jami berilgan qarzlar qoldig'i</Text>
           <Text style={styles.statsValue}>
-            {debts.reduce((sum, item) => sum + item.amount, 0).toLocaleString('ru-RU')} so'm
+            {debts.reduce((sum, item) => sum + item.totalDebt, 0).toLocaleString('ru-RU')} so'm
           </Text>
         </View>
 
-        <FlatList
-          data={debts}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#3498DB" style={{ marginTop: 50, flex: 1 }} />
+        ) : (
+          <FlatList
+            data={debts}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+          />
+        )}
 
         <View style={styles.addSection}>
           <Text style={styles.sectionTitle}>Yangi qarz berish</Text>

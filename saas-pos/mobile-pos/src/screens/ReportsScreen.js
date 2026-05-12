@@ -1,18 +1,53 @@
-import React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, ScrollView, Dimensions } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, SafeAreaView, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
+import api from '../config/api';
 
 const screenWidth = Dimensions.get('window').width;
 
 export default function ReportsScreen() {
-  const pieData = [
-    { name: 'Oziq-ovqat', population: 45, color: '#3498DB', legendFontColor: '#BDC3C7', legendFontSize: 12 },
-    { name: 'Ichimliklar', population: 25, color: '#2ECC71', legendFontColor: '#BDC3C7', legendFontSize: 12 },
-    { name: 'Shirinliklar', population: 20, color: '#F1C40F', legendFontColor: '#BDC3C7', legendFontSize: 12 },
-    { name: 'Boshqa', population: 10, color: '#E74C3C', legendFontColor: '#BDC3C7', legendFontSize: 12 },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [todayReport, setTodayReport] = useState({ totalRevenue: 0, totalProfit: 0 });
+  const [monthReport, setMonthReport] = useState({ totalRevenue: 0, totalProfit: 0 });
+  const [topProducts, setTopProducts] = useState([]);
+
+  useEffect(() => {
+    fetchReports();
+  }, []);
+
+  const fetchReports = async () => {
+    try {
+      const [todayRes, monthRes] = await Promise.all([
+        api.get('/sales/web/report?range=today'),
+        api.get('/sales/web/report?range=month')
+      ]);
+      setTodayReport(todayRes.data);
+      setMonthReport(monthRes.data);
+      setTopProducts(monthRes.data.topProducts || []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const pieData = topProducts.slice(0, 4).map((p, i) => {
+    const colors = ['#3498DB', '#2ECC71', '#F1C40F', '#E74C3C'];
+    return {
+      name: p.productName.substring(0, 10),
+      population: p.quantitySold,
+      color: colors[i % colors.length],
+      legendFontColor: '#BDC3C7',
+      legendFontSize: 12
+    };
+  });
+
+  // Dummy fallback if no products
+  if (pieData.length === 0) {
+    pieData.push({ name: 'Sotuv yo\'q', population: 1, color: '#95a5a6', legendFontColor: '#BDC3C7', legendFontSize: 12 });
+  }
 
   const barData = {
     labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
@@ -34,6 +69,14 @@ export default function ReportsScreen() {
     decimalPlaces: 0,
   };
 
+  if (loading) {
+    return (
+      <SafeAreaView style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color="#3498DB" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar style="light" />
@@ -47,16 +90,14 @@ export default function ReportsScreen() {
         <View style={styles.statsRow}>
           <LinearGradient colors={['#3498DB', '#2980B9']} style={styles.statBox}>
             <Text style={styles.statLabel}>Bugungi savdo</Text>
-            <Text style={styles.statValue}>4 500 000</Text>
-            <Text style={styles.statProfit}>Sof foyda: 1 200 000</Text>
-            <Text style={styles.statTrend}>↑ +15%</Text>
+            <Text style={styles.statValue}>{todayReport.totalRevenue.toLocaleString('ru-RU')}</Text>
+            <Text style={styles.statProfit}>Sof foyda: {todayReport.totalProfit.toLocaleString('ru-RU')}</Text>
           </LinearGradient>
           
           <LinearGradient colors={['#2ECC71', '#27AE60']} style={styles.statBox}>
             <Text style={styles.statLabel}>Shu oylik savdo</Text>
-            <Text style={styles.statValue}>124 500 000</Text>
-            <Text style={styles.statProfit}>Sof foyda: 25 300 000</Text>
-            <Text style={styles.statTrend}>↑ +8%</Text>
+            <Text style={styles.statValue}>{monthReport.totalRevenue.toLocaleString('ru-RU')}</Text>
+            <Text style={styles.statProfit}>Sof foyda: {monthReport.totalProfit.toLocaleString('ru-RU')}</Text>
           </LinearGradient>
         </View>
 

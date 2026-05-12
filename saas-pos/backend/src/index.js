@@ -5,6 +5,8 @@ import authRoutes      from './routes/auth.js'
 import superAdminRoutes from './routes/superadmin.js'
 import productRoutes   from './routes/products.js'
 import salesRoutes     from './routes/sales.js'
+import expensesRoutes  from './routes/expenses.js'
+import debtsRoutes     from './routes/debts.js'
 
 dotenv.config()
 
@@ -29,6 +31,8 @@ app.use('/api/auth',     authRoutes)
 app.use('/api/super',    superAdminRoutes)
 app.use('/api/products', productRoutes)
 app.use('/api/sales',    salesRoutes)
+app.use('/api/expenses', expensesRoutes)
+app.use('/api/debts',    debtsRoutes)
 
 // ─── Health check ─────────────────────────────────────────────────────────────
 app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date() }))

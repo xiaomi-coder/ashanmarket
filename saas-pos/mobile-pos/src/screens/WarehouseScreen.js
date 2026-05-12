@@ -1,23 +1,35 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import api from '../config/api';
 
 export default function WarehouseScreen({ navigation }) {
-  const [products, setProducts] = useState([
-    { id: '1', name: 'Coca-Cola 1.5L', barcode: '4321234567890', quantity: 45, unit: 'dona', price: '12000', costPrice: '9000', category: 'Ichimliklar' },
-    { id: '2', name: 'Snickers', barcode: '5432109876543', quantity: 8, unit: 'dona', price: '8000', costPrice: '6500', category: 'Shirinliklar' },
-    { id: '3', name: 'Kartoshka', barcode: '200000000001', quantity: 15.5, unit: 'kg', price: '4000', costPrice: '2500', category: 'Sabzavotlar' },
-  ]);
-  
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
 
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await api.get('/products/web');
+      setProducts(response.data);
+    } catch (error) {
+      console.error('Ombor xatosi:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const renderItem = ({ item }) => {
-    const isLowStock = item.quantity <= 10;
+    const isLowStock = item.stock <= (item.lowStockThreshold || 10);
     
     return (
       <View style={styles.card}>
         <View style={styles.cardInfo}>
-          <Text style={styles.cardCategory}>{item.category}</Text>
+          <Text style={styles.cardCategory}>{item.category?.name || 'Umumiy'}</Text>
           <Text style={styles.cardName}>{item.name}</Text>
           <Text style={styles.cardBarcode}>Shtrix kod: {item.barcode}</Text>
           <View style={styles.priceRow}>
@@ -26,7 +38,7 @@ export default function WarehouseScreen({ navigation }) {
           </View>
         </View>
         <View style={[styles.quantityBadge, isLowStock && styles.quantityBadgeLow]}>
-          <Text style={styles.quantityText}>{item.quantity} {item.unit}</Text>
+          <Text style={styles.quantityText}>{item.stock} {item.unit}</Text>
         </View>
       </View>
     );
@@ -66,20 +78,24 @@ export default function WarehouseScreen({ navigation }) {
 
         <View style={styles.statsRow}>
           <Text style={styles.statsText}>Jami turlar: {products.length}</Text>
-          <Text style={styles.statsText}>Jami miqdor: {products.reduce((s, p) => s + p.quantity, 0)}</Text>
+          <Text style={styles.statsText}>Jami miqdor: {products.reduce((s, p) => s + (p.stock || 0), 0)}</Text>
         </View>
 
-        <FlatList
-          data={filteredProducts}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-          ListEmptyComponent={
-            <Text style={styles.emptyText}>Mahsulot topilmadi</Text>
-          }
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#3498DB" style={{ marginTop: 50 }} />
+        ) : (
+          <FlatList
+            data={filteredProducts}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>Mahsulot topilmadi</Text>
+            }
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

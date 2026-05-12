@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, Feather } from '@expo/vector-icons';
+import { View, ActivityIndicator } from 'react-native';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -13,6 +14,8 @@ import DebtsScreen from './src/screens/DebtsScreen';
 import WarehouseScreen from './src/screens/WarehouseScreen';
 import ReportsScreen from './src/screens/ReportsScreen';
 import MenuScreen from './src/screens/MenuScreen';
+
+import { AuthProvider, AuthContext } from './src/context/AuthContext';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -67,27 +70,46 @@ function MainTabs() {
   );
 }
 
-export default function App() {
+function AppNav() {
+  const { userToken, isLoading } = React.useContext(AuthContext);
+
+  if (isLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1A1E29' }}>
+        <ActivityIndicator size="large" color="#3498DB" />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <Stack.Navigator 
-        initialRouteName="Login"
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: '#1A1E29' },
           animation: 'fade',
         }}
       >
-        <Stack.Screen name="Login" component={LoginScreen} />
-        {/* Main Dashboard Tabs */}
-        <Stack.Screen name="Dashboard" component={MainTabs} />
-        
-        {/* Sub-screens pushed on top of tabs */}
-        <Stack.Screen name="Scanner" component={ScannerScreen} />
-        <Stack.Screen name="Expenses" component={ExpensesScreen} />
-        <Stack.Screen name="Debts" component={DebtsScreen} />
-        <Stack.Screen name="Warehouse" component={WarehouseScreen} />
+        {userToken === null ? (
+          <Stack.Screen name="Login" component={LoginScreen} />
+        ) : (
+          <>
+            <Stack.Screen name="Dashboard" component={MainTabs} />
+            <Stack.Screen name="Scanner" component={ScannerScreen} />
+            <Stack.Screen name="Expenses" component={ExpensesScreen} />
+            <Stack.Screen name="Debts" component={DebtsScreen} />
+            <Stack.Screen name="Warehouse" component={WarehouseScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppNav />
+    </AuthProvider>
   );
 }

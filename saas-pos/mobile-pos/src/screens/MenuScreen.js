@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { AuthContext } from '../context/AuthContext';
 
 export default function MenuScreen() {
-  
+  const { logout } = useContext(AuthContext);
+
   const handleLogout = () => {
     Alert.alert("Tizimdan chiqish", "Haqiqatan ham hisobdan chiqmoqchimisiz?", [
       { text: "Yo'q", style: "cancel" },
-      { text: "Ha, chiqish", style: "destructive", onPress: () => console.log('Logged out') }
+      { text: "Ha, chiqish", style: "destructive", onPress: () => logout() }
     ]);
   };
 

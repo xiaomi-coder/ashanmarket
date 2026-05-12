@@ -1,18 +1,50 @@
-import React from 'react';
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, TextInput, Image, Platform } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, SafeAreaView, Dimensions, TextInput, Image, Platform, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { useFocusEffect } from '@react-navigation/native';
+import api from '../config/api';
 
 const { width } = Dimensions.get('window');
 const itemWidth = (width - 50) / 2;
 
 export default function DashboardScreen({ navigation }) {
-  const transactions = [
-    { id: '1', name: 'Alisher', time: '14:32', items: 7, total: '185,000', icon: '👤' },
-    { id: '2', name: 'Malika', time: '14:15', items: 3, total: '72,500', icon: '👩' },
-    { id: '3', name: 'Nodir', time: '13:05', items: 12, total: '340,000', icon: '👨' },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState({
+    totalRevenue: 0,
+    totalProfit: 0,
+    recentTransactions: [],
+  });
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Fetch report for today
+      const reportRes = await api.get(`/sales/web/report?from=${today}&to=${today}`);
+      
+      // Fetch recent sales for today
+      const salesRes = await api.get(`/sales/web?from=${today}&to=${today}&limit=5`);
+
+      setDashboardData({
+        totalRevenue: reportRes.data.totalRevenue || 0,
+        totalProfit: reportRes.data.totalProfit || 0,
+        recentTransactions: salesRes.data || [],
+      });
+    } catch (e) {
+      console.log('Error loading dashboard data', e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -50,12 +82,15 @@ export default function DashboardScreen({ navigation }) {
         <LinearGradient colors={['#2980B9', '#1A5276']} start={{x: 0, y: 0}} end={{x: 1, y: 1}} style={styles.mainCard}>
           <View style={styles.cardTopRow}>
             <Text style={styles.cardLabel}>JAMI SAVDO (Bugun)</Text>
-            <Text style={styles.cardTrend}>↗ +15.2%</Text>
+            {loading && <ActivityIndicator size="small" color="white" />}
           </View>
-          <Text style={styles.cardValue}>4 500 000 so'm</Text>
-          <Text style={styles.cardProfit}>Jami foyda: 1 200 000 so'm</Text>
+          <Text style={styles.cardValue}>
+            {dashboardData.totalRevenue.toLocaleString('ru-RU')} so'm
+          </Text>
+          <Text style={styles.cardProfit}>
+            Jami foyda: {dashboardData.totalProfit.toLocaleString('ru-RU')} so'm
+          </Text>
           
-          {/* Decorative background shapes for gradient */}
           <View style={styles.glassReflection} />
         </LinearGradient>
 
@@ -91,28 +126,31 @@ export default function DashboardScreen({ navigation }) {
         </View>
 
         {/* Recent Transactions */}
-        <Text style={styles.sectionTitle}>So'nggi Sotuvlar</Text>
+        <Text style={styles.sectionTitle}>Bugungi So'nggi Sotuvlar</Text>
         <View style={styles.transactionsList}>
-          {transactions.map((tx) => (
+          {dashboardData.recentTransactions.length === 0 && !loading && (
+            <Text style={{ color: '#BDC3C7', textAlign: 'center', marginTop: 10 }}>Hozircha sotuvlar yo'q</Text>
+          )}
+          {dashboardData.recentTransactions.map((tx) => (
             <View key={tx.id} style={styles.txRow}>
               <View style={styles.txAvatar}>
-                <Text style={styles.txAvatarIcon}>{tx.icon}</Text>
+                <Text style={styles.txAvatarIcon}>🧾</Text>
               </View>
               <View style={styles.txDetails}>
-                <Text style={styles.txLabel}>Mijoz</Text>
-                <Text style={styles.txName}>{tx.name}</Text>
+                <Text style={styles.txLabel}>Kassir</Text>
+                <Text style={styles.txName}>{tx.cashierName}</Text>
               </View>
               <View style={styles.txDetailsMid}>
                 <Text style={styles.txLabel}>Vaqt</Text>
-                <Text style={styles.txValue}>{tx.time}</Text>
+                <Text style={styles.txValue}>{new Date(tx.createdAt).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })}</Text>
               </View>
               <View style={styles.txDetailsMid}>
                 <Text style={styles.txLabel}>Soni</Text>
-                <Text style={styles.txValue}>{tx.items}</Text>
+                <Text style={styles.txValue}>{tx.items?.reduce((a,b)=>a+b.quantity,0) || 0}</Text>
               </View>
               <View style={styles.txDetailsRight}>
                 <Text style={styles.txLabel}>Summa</Text>
-                <Text style={styles.txTotal}>{tx.total} so'm</Text>
+                <Text style={styles.txTotal}>{Number(tx.total).toLocaleString('ru-RU')} so'm</Text>
               </View>
             </View>
           ))}

@@ -1,46 +1,66 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, SafeAreaView, FlatList, TextInput, KeyboardAvoidingView, Platform, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
+import api from '../config/api';
 
 export default function ExpensesScreen({ navigation }) {
-  const [expenses, setExpenses] = useState([
-    { id: '1', reason: 'Svet uchun to\'lov', categoryName: 'Kommunal', amount: '120000', date: 'Bugun, 10:30', cashierName: 'Admin' },
-    { id: '2', reason: 'Tushlik (xodimlar)', categoryName: 'Oziq-ovqat', amount: '85000', date: 'Kecha, 13:00', cashierName: 'Admin' },
-  ]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
   
   const [newReason, setNewReason] = useState('');
   const [newCategory, setNewCategory] = useState('');
   const [newAmount, setNewAmount] = useState('');
 
-  const addExpense = () => {
-    if (newReason.trim() && newAmount.trim() && newCategory.trim()) {
-      setExpenses([
-        { 
-          id: Date.now().toString(), 
-          reason: newReason, 
-          categoryName: newCategory,
-          amount: newAmount, 
-          date: 'Hozir',
-          cashierName: 'Admin'
-        },
-        ...expenses
-      ]);
-      setNewReason('');
-      setNewCategory('');
-      setNewAmount('');
+  useEffect(() => {
+    fetchExpenses();
+  }, []);
+
+  const fetchExpenses = async () => {
+    try {
+      const response = await api.get('/expenses');
+      setExpenses(response.data);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <View style={styles.cardInfo}>
-        <Text style={styles.cardCategory}>{item.categoryName}</Text>
-        <Text style={styles.cardTitle}>{item.reason}</Text>
-        <Text style={styles.cardDate}>{item.date} • {item.cashierName}</Text>
+  const addExpense = async () => {
+    if (newReason.trim() && newAmount.trim() && newCategory.trim()) {
+      try {
+        const response = await api.post('/expenses', {
+          reason: newReason,
+          categoryName: newCategory,
+          amount: newAmount
+        });
+        setExpenses([response.data, ...expenses]);
+        setNewReason('');
+        setNewCategory('');
+        setNewAmount('');
+        Alert.alert("Muvaffaqiyatli", "Xarajat saqlandi");
+      } catch (error) {
+        Alert.alert("Xatolik", "Xarajat qo'shishda xatolik yuz berdi");
+      }
+    } else {
+      Alert.alert("Xatolik", "Barcha maydonlarni to'ldiring");
+    }
+  };
+
+  const renderItem = ({ item }) => {
+    const d = new Date(item.date);
+    const dateStr = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth()+1).toString().padStart(2, '0')}.${d.getFullYear()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    return (
+      <View style={styles.card}>
+        <View style={styles.cardInfo}>
+          <Text style={styles.cardCategory}>{item.categoryName}</Text>
+          <Text style={styles.cardTitle}>{item.reason}</Text>
+          <Text style={styles.cardDate}>{dateStr} • {item.cashierName}</Text>
+        </View>
+        <Text style={styles.cardAmount}>- {parseInt(item.amount).toLocaleString('ru-RU')} so'm</Text>
       </View>
-      <Text style={styles.cardAmount}>- {parseInt(item.amount).toLocaleString('ru-RU')} so'm</Text>
-    </View>
-  );
+    );
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -57,14 +77,18 @@ export default function ExpensesScreen({ navigation }) {
         style={styles.content}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
       >
-        <FlatList
-          data={expenses}
-          keyExtractor={item => item.id}
-          renderItem={renderItem}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          keyboardDismissMode="on-drag"
-        />
+        {loading ? (
+          <ActivityIndicator size="large" color="#3498DB" style={{ marginTop: 50, flex: 1 }} />
+        ) : (
+          <FlatList
+            data={expenses}
+            keyExtractor={item => item.id.toString()}
+            renderItem={renderItem}
+            contentContainerStyle={styles.list}
+            showsVerticalScrollIndicator={false}
+            keyboardDismissMode="on-drag"
+          />
+        )}
 
         <View style={styles.addSection}>
           <Text style={styles.sectionTitle}>Yangi xarajat qo'shish</Text>

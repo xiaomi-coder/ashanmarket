@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "mobile-pos",
+    "name": "ChaqqonPOS",
     "slug": "mobile-pos",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/chaqqonpos_logo.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/chaqqonpos_logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,21 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.bakoev71.sotuvpos",
+      "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/chaqqonpos_logo.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "a054092f-a65f-4d0b-bf46-51bf1f2acddd"
+      }
     }
   }
 }
