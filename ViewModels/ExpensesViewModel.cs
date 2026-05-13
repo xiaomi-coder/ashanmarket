@@ -76,11 +76,14 @@ public class ExpensesViewModel : BaseViewModel
     public ICommand CloseAddCategoryCommand { get; }
     public ICommand SaveCategoryCommand { get; }
 
-    public ExpensesViewModel(IExpenseRepository expenseRepo, IAuthService authService, IShiftService shiftService)
+    private readonly ISyncService _syncService;
+
+    public ExpensesViewModel(IExpenseRepository expenseRepo, IAuthService authService, IShiftService shiftService, ISyncService syncService)
     {
         _expenseRepo = expenseRepo;
         _authService = authService;
         _shiftService = shiftService;
+        _syncService = syncService;
 
         AddExpenseCommand = new AsyncRelayCommand(AddExpenseAsync, () => NewAmount > 0 && SelectedCategory != null);
         LoadExpensesCommand = new AsyncRelayCommand(LoadExpensesAsync);
@@ -179,6 +182,7 @@ public class ExpensesViewModel : BaseViewModel
             };
 
             await _expenseRepo.CreateExpenseAsync(expense);
+            _ = Task.Run(() => _syncService.PushExpensesAsync());
 
             NewAmountText = string.Empty;
             NewReason = string.Empty;

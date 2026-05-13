@@ -61,8 +61,13 @@ public interface IProductService
 public class ProductService : IProductService
 {
     private readonly IProductRepository _repo;
+    private readonly ISyncService _syncService;
 
-    public ProductService(IProductRepository repo) => _repo = repo;
+    public ProductService(IProductRepository repo, ISyncService syncService)
+    {
+        _repo = repo;
+        _syncService = syncService;
+    }
 
     public Task<Product?> GetByBarcodeAsync(string barcode) => _repo.GetByBarcodeAsync(barcode);
     public Task<IEnumerable<Product>> SearchAsync(string query) => _repo.SearchAsync(query);
@@ -76,13 +81,17 @@ public class ProductService : IProductService
     public async Task<int> AddProductAsync(Product product)
     {
         ValidateProduct(product);
-        return await _repo.AddAsync(product);
+        var id = await _repo.AddAsync(product);
+        _ = Task.Run(() => _syncService.PushProductsAsync());
+        return id;
     }
 
     public async Task<bool> UpdateProductAsync(Product product)
     {
         ValidateProduct(product);
-        return await _repo.UpdateAsync(product);
+        var result = await _repo.UpdateAsync(product);
+        _ = Task.Run(() => _syncService.PushProductsAsync());
+        return result;
     }
 
     public Task<bool> DeleteProductAsync(int id) => _repo.DeleteAsync(id);
@@ -209,10 +218,12 @@ public interface ICustomerService
 public class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository _customerRepo;
+    private readonly ISyncService _syncService;
 
-    public CustomerService(ICustomerRepository customerRepo)
+    public CustomerService(ICustomerRepository customerRepo, ISyncService syncService)
     {
         _customerRepo = customerRepo;
+        _syncService = syncService;
     }
 
     public Task<Customer?> GetByPhoneAsync(string phone) => _customerRepo.GetByPhoneAsync(phone);
@@ -256,7 +267,9 @@ public class CustomerService : ICustomerService
             Type = "Paid",
             Notes = notes
         };
-        return await _customerRepo.AddDebtTransactionAsync(transaction);
+        var res = await _customerRepo.AddDebtTransactionAsync(transaction);
+        _ = Task.Run(() => _syncService.PushDebtsAsync());
+        return res;
     }
 
     public async Task<int> AddDebtAsync(int customerId, decimal amount, int? saleId = null, string notes = "Sotuv orqali qarz")
@@ -269,7 +282,9 @@ public class CustomerService : ICustomerService
             SaleId = saleId,
             Notes = notes
         };
-        return await _customerRepo.AddDebtTransactionAsync(transaction);
+        var res = await _customerRepo.AddDebtTransactionAsync(transaction);
+        _ = Task.Run(() => _syncService.PushDebtsAsync());
+        return res;
     }
 
     public Task UpdateDebtTermAsync(int customerId, int termDays)
@@ -368,11 +383,13 @@ public class SaleService : ISaleService
 {
     private readonly ISaleRepository _repo;
     private readonly ICustomerRepository _customerRepo;
+    private readonly ISyncService _syncService;
 
-    public SaleService(ISaleRepository repo, ICustomerRepository customerRepo)
+    public SaleService(ISaleRepository repo, ICustomerRepository customerRepo, ISyncService syncService)
     {
         _repo = repo;
         _customerRepo = customerRepo;
+        _syncService = syncService;
     }
 
     public async Task<int> CompleteSaleAsync(Sale sale)
@@ -394,6 +411,11 @@ public class SaleService : ISaleService
             // Bizda Sale ob'ektida CustomerId yo'q, lekin bu mantiqni ViewModeL da yoki shuyerda hal qilishimiz kerak.
             // Yaxshisi buni ViewModeldan turib qilamiz, chunki Sale jadvalida CustomerId yo'q.
         }
+
+        _ = Task.Run(async () => {
+            await _syncService.SyncSalesAsync();
+            await _syncService.PushProductsAsync();
+        });
 
         return saleId;
     }

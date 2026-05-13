@@ -7,14 +7,10 @@ public class DatabaseContext
 {
     private readonly string _connectionString;
 
-    public DatabaseContext(string dbPath = "supermarket_pos.db")
+    public DatabaseContext(string dbPath = "sotuvpos_v2.db")
     {
-        var fullPath = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "SupermarketPOS",
-            dbPath);
+        var fullPath = Path.Combine(AppContext.BaseDirectory, dbPath);
 
-        Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         _connectionString = $"Data Source={fullPath};Cache=Shared;";
         InitializeDatabase();
     }

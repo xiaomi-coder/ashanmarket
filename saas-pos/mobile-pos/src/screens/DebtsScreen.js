@@ -122,9 +122,9 @@ export default function DebtsScreen({ navigation }) {
       </View>
 
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.content}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 20}
       >
         <View style={styles.statsCard}>
           <Text style={styles.statsLabel}>Jami berilgan qarzlar qoldig'i</Text>

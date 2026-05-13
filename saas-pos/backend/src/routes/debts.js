@@ -1,6 +1,7 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
 import { authMiddleware } from '../middleware/auth.js'
+import { apiKeyAuth } from '../middleware/apiKeyAuth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -50,8 +51,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const transaction = await prisma.debtTransaction.create({
       data: {
         customerId: customer.id,
-        userId: req.user.id,
-        cashierName: req.user.username,
+        userId: req.user.userId,
+        cashierName: req.user.fullName || 'Admin',
         type: type,
         amount: numericAmount
       }
@@ -71,6 +72,44 @@ router.post('/', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: "Qarz amaliyotida xatolik" })
+  }
+})
+
+// ─── EXE Sync routes (API Key) ────────────────────────────────────────────────
+router.use('/sync', apiKeyAuth)
+
+// POST /api/debts/sync/upload
+router.post('/sync/upload', async (req, res) => {
+  try {
+    const { debts } = req.body
+    if (!debts || !debts.length) return res.json({ success: true })
+    
+    let count = 0
+    for (const d of debts) {
+      let cust = await prisma.customer.findFirst({
+        where: { tenantId: req.tenant.id, phone: d.phone }
+      })
+      if (!cust) {
+        cust = await prisma.customer.create({
+          data: {
+            tenantId: req.tenant.id,
+            phone: d.phone || 'N/A',
+            name: d.name || 'Nomalum',
+            totalDebt: d.debtBalance || 0
+          }
+        })
+      } else {
+        await prisma.customer.update({
+          where: { id: cust.id },
+          data: { totalDebt: d.debtBalance || 0 }
+        })
+      }
+      count++
+    }
+    res.json({ success: true, count })
+  } catch(e) {
+    console.error('Debt sync error:', e)
+    res.status(500).json({ error: e.message })
   }
 })
 

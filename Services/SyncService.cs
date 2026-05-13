@@ -11,6 +11,9 @@ public interface ISyncService
 {
     Task<bool> SyncSalesAsync();
     Task<bool> AuthenticateCloudAsync(string password);
+    Task<bool> PushProductsAsync();
+    Task<bool> PushDebtsAsync();
+    Task<bool> PushExpensesAsync();
 }
 
 public class SyncService : ISyncService
@@ -155,5 +158,79 @@ public class SyncService : ISyncService
             Debug.WriteLine($"Cloud auth failed: {ex}");
             return false;
         }
+    }
+    public async Task<bool> PushProductsAsync()
+    {
+        try
+        {
+            var settings = SettingsManager.Load();
+            if (string.IsNullOrWhiteSpace(settings.BackendApiUrl) || string.IsNullOrWhiteSpace(settings.ApiKey))
+                return false;
+
+            // Using direct SQL to fetch all products to push
+            var query = "SELECT Barcode, Name as name, Price as price, CostPrice as costPrice, Stock as stock, LowStockThreshold as lowStockThreshold, Unit as unit FROM Products WHERE IsActive=1";
+            var _db = new SupermarketPOS.Data.DatabaseContext();
+            using var conn = _db.GetConnection();
+            var products = await Dapper.SqlMapper.QueryAsync(conn, query);
+
+            var payload = new { products };
+            var url = $"{settings.BackendApiUrl.TrimEnd('/')}/products/sync/upload";
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", settings.ApiKey);
+
+            var response = await _httpClient.PostAsJsonAsync(url, payload);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"Sinxronizatsiya (Tovarlar) xatosi: {ex}");
+            return false;
+        }
+    }
+
+    public async Task<bool> PushDebtsAsync()
+    {
+        try
+        {
+            var settings = SettingsManager.Load();
+            if (string.IsNullOrWhiteSpace(settings.BackendApiUrl) || string.IsNullOrWhiteSpace(settings.ApiKey))
+                return false;
+
+            var _db = new SupermarketPOS.Data.DatabaseContext();
+            using var conn = _db.GetConnection();
+            var debts = await Dapper.SqlMapper.QueryAsync(conn, "SELECT Phone as phone, Name as name, DebtBalance as debtBalance FROM Customers WHERE DebtBalance > 0");
+
+            var payload = new { debts };
+            var url = $"{settings.BackendApiUrl.TrimEnd('/')}/debts/sync/upload";
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", settings.ApiKey);
+
+            var response = await _httpClient.PostAsJsonAsync(url, payload);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
+    }
+
+    public async Task<bool> PushExpensesAsync()
+    {
+        try
+        {
+            var settings = SettingsManager.Load();
+            if (string.IsNullOrWhiteSpace(settings.BackendApiUrl) || string.IsNullOrWhiteSpace(settings.ApiKey))
+                return false;
+
+            var _db = new SupermarketPOS.Data.DatabaseContext();
+            using var conn = _db.GetConnection();
+            var expenses = await Dapper.SqlMapper.QueryAsync(conn, "SELECT Amount as amount, Reason as reason, CreatedAt as createdAt FROM Expenses");
+
+            var payload = new { expenses };
+            var url = $"{settings.BackendApiUrl.TrimEnd('/')}/expenses/sync/upload";
+            _httpClient.DefaultRequestHeaders.Clear();
+            _httpClient.DefaultRequestHeaders.Add("x-api-key", settings.ApiKey);
+
+            var response = await _httpClient.PostAsJsonAsync(url, payload);
+            return response.IsSuccessStatusCode;
+        }
+        catch { return false; }
     }
 }

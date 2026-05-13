@@ -73,9 +73,9 @@ export default function ExpensesScreen({ navigation }) {
       </View>
 
       <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
         style={styles.content}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 20}
       >
         {loading ? (
           <ActivityIndicator size="large" color="#3498DB" style={{ marginTop: 50, flex: 1 }} />

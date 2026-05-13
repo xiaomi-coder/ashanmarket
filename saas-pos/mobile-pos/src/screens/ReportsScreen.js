@@ -53,7 +53,7 @@ export default function ReportsScreen() {
     labels: ['Dush', 'Sesh', 'Chor', 'Pay', 'Jum', 'Shan', 'Yak'],
     datasets: [
       {
-        data: [20, 45, 28, 80, 99, 43, 50],
+        data: [0, 0, 0, 0, 0, 0, 0],
       },
     ],
   };

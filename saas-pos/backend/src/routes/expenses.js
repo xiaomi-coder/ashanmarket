@@ -1,6 +1,7 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
 import { authMiddleware } from '../middleware/auth.js'
+import { apiKeyAuth } from '../middleware/apiKeyAuth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -32,8 +33,8 @@ router.post('/', authMiddleware, async (req, res) => {
     const expense = await prisma.expense.create({
       data: {
         tenantId: req.user.tenantId,
-        userId: req.user.id,
-        cashierName: req.user.username,
+        userId: req.user.userId,
+        cashierName: req.user.fullName || 'Admin',
         reason,
         categoryName,
         amount: parseFloat(amount)
@@ -44,6 +45,41 @@ router.post('/', authMiddleware, async (req, res) => {
   } catch (error) {
     console.error(error)
     res.status(500).json({ error: "Xarajat qo'shishda xatolik" })
+  }
+})
+
+// ─── EXE Sync routes (API Key) ────────────────────────────────────────────────
+router.use('/sync', apiKeyAuth)
+
+// POST /api/expenses/sync/upload
+router.post('/sync/upload', async (req, res) => {
+  try {
+    const { expenses } = req.body
+    if (!expenses || !expenses.length) return res.json({ success: true })
+    
+    let count = 0
+    for (const e of expenses) {
+      const exists = await prisma.expense.findFirst({
+        where: { tenantId: req.tenant.id, amount: e.amount, reason: e.reason || '' }
+      })
+      if (!exists) {
+        await prisma.expense.create({
+          data: {
+            tenantId: req.tenant.id,
+            amount: e.amount,
+            reason: e.reason || 'Sync',
+            categoryName: 'Umumiy',
+            cashierName: 'Sync',
+            userId: 1
+          }
+        })
+        count++
+      }
+    }
+    res.json({ success: true, count })
+  } catch(e) {
+    console.error('Expense sync error:', e)
+    res.status(500).json({ error: e.message })
   }
 })
 

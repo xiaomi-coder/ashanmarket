@@ -111,7 +111,7 @@ public class LoginViewModel : BaseViewModel
     private string _cloudSlug = string.Empty;
     public string CloudSlug { get => _cloudSlug; set => SetProperty(ref _cloudSlug, value); }
 
-    private string _backendApiUrl = "http://sotuvpos.uz/api";
+    private string _backendApiUrl = "https://sotuvpos.uz/api";
     public string BackendApiUrl { get => _backendApiUrl; set => SetProperty(ref _backendApiUrl, value); }
 
     public bool LoginSuccess { get; private set; }
@@ -365,7 +365,7 @@ public class MainViewModel : BaseViewModel
 
                 var srcPath = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "SupermarketPOS", "supermarket_pos.db");
+                    "SupermarketPOS", "sotuvpos_v2.db");
 
                 var dest = Path.Combine(backupDir, $"backup_{DateTime.Now:yyyyMMdd_HHmm}.db");
                 File.Copy(srcPath, dest, true);

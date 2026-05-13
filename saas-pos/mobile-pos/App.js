@@ -16,11 +16,14 @@ import ReportsScreen from './src/screens/ReportsScreen';
 import MenuScreen from './src/screens/MenuScreen';
 
 import { AuthProvider, AuthContext } from './src/context/AuthContext';
+import { useSafeAreaInsets, SafeAreaProvider } from 'react-native-safe-area-context';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
+  
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -33,8 +36,8 @@ function MainTabs() {
           shadowOffset: { width: 0, height: -4 },
           shadowOpacity: 0.2,
           shadowRadius: 10,
-          height: 70,
-          paddingBottom: 10,
+          height: 65 + insets.bottom,
+          paddingBottom: 10 + insets.bottom,
           paddingTop: 10,
         },
         tabBarActiveTintColor: '#3498DB',
@@ -108,8 +111,10 @@ function AppNav() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <AppNav />
-    </AuthProvider>
+    <SafeAreaProvider>
+      <AuthProvider>
+        <AppNav />
+      </AuthProvider>
+    </SafeAreaProvider>
   );
 }
