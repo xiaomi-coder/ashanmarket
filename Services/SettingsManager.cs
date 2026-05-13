@@ -8,7 +8,7 @@ public class AppSettings
     public string StoreName { get; set; } = "🛒 SuperMarket";
     
     // Cloud Sync Settings
-    public string BackendApiUrl { get; set; } = "https://sotuvpos.uz/api";
+    public string BackendApiUrl { get; set; } = "http://5.182.26.100:5005/api";
     public string CloudSlug { get; set; } = "";
     public string CloudUsername { get; set; } = "";
     public string ApiKey { get; set; } = "";

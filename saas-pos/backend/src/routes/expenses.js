@@ -68,8 +68,9 @@ router.post('/sync/upload', async (req, res) => {
             tenantId: req.tenant.id,
             amount: e.amount,
             reason: e.reason || 'Sync',
-            categoryName: 'Umumiy',
+            categoryName: e.categoryName || 'Umumiy',
             cashierName: 'Sync',
+            date: e.createdAt ? new Date(e.createdAt) : undefined,
             userId: 1
           }
         })
@@ -82,5 +83,19 @@ router.post('/sync/upload', async (req, res) => {
     res.status(500).json({ error: e.message })
   }
 })
+
+// GET /api/expenses/sync/download
+router.get('/sync/download', async (req, res) => {
+  try {
+    const expenses = await prisma.expense.findMany({
+      where: { tenantId: req.tenant.id },
+      orderBy: { date: 'desc' },
+      take: 100
+    });
+    res.json({ expenses });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 export default router

@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { StyleSheet, Text, View, SafeAreaView, ScrollView, Dimensions, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { PieChart, BarChart } from 'react-native-chart-kit';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../config/api';
 
 const screenWidth = Dimensions.get('window').width;
@@ -13,15 +14,21 @@ export default function ReportsScreen() {
   const [monthReport, setMonthReport] = useState({ totalRevenue: 0, totalProfit: 0 });
   const [topProducts, setTopProducts] = useState([]);
 
-  useEffect(() => {
-    fetchReports();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      fetchReports();
+    }, [])
+  );
 
   const fetchReports = async () => {
     try {
+      setLoading(true);
+      const today = new Date().toISOString().split('T')[0];
+      const monthStart = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+      
       const [todayRes, monthRes] = await Promise.all([
-        api.get('/sales/web/report?range=today'),
-        api.get('/sales/web/report?range=month')
+        api.get(`/sales/web/report?from=${today}&to=${today}`),
+        api.get(`/sales/web/report?from=${monthStart}&to=${today}`)
       ]);
       setTodayReport(todayRes.data);
       setMonthReport(monthRes.data);

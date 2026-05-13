@@ -147,8 +147,8 @@ public class SaleRepository : ISaleRepository
             WHERE DATE(s.CreatedAt) = @Date AND s.Status = 'Completed'",
             new { Date = dateStr });
 
-        decimal totalRevenue = (decimal)(summary?.TotalRevenue ?? 0);
-        decimal totalCost = (decimal)(costData?.TotalCost ?? 0);
+        decimal totalRevenue = Convert.ToDecimal(summary?.TotalRevenue ?? 0);
+        decimal totalCost = Convert.ToDecimal(costData?.TotalCost ?? 0);
 
         var topProducts = await GetTopProductsAsync(date, date, 5);
 
@@ -203,7 +203,8 @@ public class SaleRepository : ISaleRepository
         using var conn = _db.GetConnection();
         var count = await conn.QuerySingleAsync<int>(
             "SELECT COUNT(*) FROM Sales WHERE DATE(CreatedAt) = DATE('now','localtime')");
-        return $"{DateTime.Now:yyyyMMdd}-{(count + 1):D4}";
+        var rnd = Guid.NewGuid().ToString("N")[..4].ToUpper(); // 4 xonali noyob kod
+        return $"{DateTime.Now:yyyyMMdd}-{(count + 1):D4}-{rnd}";
     }
 
     public async Task<IEnumerable<Sale>> GetUnsyncedSalesAsync()

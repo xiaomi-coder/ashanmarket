@@ -182,6 +182,14 @@ CREATE INDEX IF NOT EXISTS idx_debt_customer    ON DebtTransactions(CustomerId);
         try { using var u5 = conn.CreateCommand(); u5.CommandText = "ALTER TABLE Customers ADD COLUMN DebtTermDays INTEGER NOT NULL DEFAULT 30;"; u5.ExecuteNonQuery(); } catch { }
         try { using var u6 = conn.CreateCommand(); u6.CommandText = "ALTER TABLE Customers ADD COLUMN OldestDebtDate TEXT;"; u6.ExecuteNonQuery(); } catch { }
         try { using var u7 = conn.CreateCommand(); u7.CommandText = "ALTER TABLE Expenses ADD COLUMN CategoryId INTEGER;"; u7.ExecuteNonQuery(); } catch { }
+
+        // Duplikat xarajatlarni tozalash (Pull Sync xatosini tuzatish)
+        try { 
+            using var dup = conn.CreateCommand(); 
+            dup.CommandText = "DELETE FROM Expenses WHERE Id NOT IN (SELECT MIN(Id) FROM Expenses GROUP BY Amount, Reason, SUBSTR(CreatedAt,1,16));"; 
+            var deleted = dup.ExecuteNonQuery();
+            if (deleted > 0) System.Diagnostics.Debug.WriteLine($"🧹 {deleted} ta duplikat xarajat tozalandi!");
+        } catch { }
     }
 
     public string GetDatabasePath()

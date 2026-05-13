@@ -206,6 +206,8 @@ public class MainViewModel : BaseViewModel
     private readonly IProductService _productService;
     private readonly IAuthService    _authService;
     private readonly IShiftService   _shiftService;
+    private readonly ISyncService    _syncService;
+    private System.Threading.Timer?  _syncTimer;
 
     public SalesViewModel              SalesVM     { get; }
     public ProductManagementViewModel  ProductsVM  { get; }
@@ -287,6 +289,7 @@ public class MainViewModel : BaseViewModel
         _productService  = productService;
         _authService     = authService;
         _shiftService    = shiftService;
+        _syncService     = syncService;
         _currentView     = salesVM;
         _storeName       = SettingsManager.Load().StoreName;
         
@@ -303,7 +306,7 @@ public class MainViewModel : BaseViewModel
         BackupCommand           = new AsyncRelayCommand(BackupDatabaseAsync);
         ManageShiftCommand      = new AsyncRelayCommand(ManageShiftAsync);
         SyncCommand             = new AsyncRelayCommand(async () => {
-            var success = await syncService.SyncSalesAsync();
+            var success = await _syncService.SyncSalesAsync();
             if (success) 
                 System.Windows.MessageBox.Show("Sinxronizatsiya muvaffaqiyatli yakunlandi!", "Sync", System.Windows.MessageBoxButton.OK, System.Windows.MessageBoxImage.Information);
         });
@@ -325,6 +328,20 @@ public class MainViewModel : BaseViewModel
             // Prompt to open shift
             await ManageShiftAsync();
         }
+
+        // ✅ Dastur ochilganda darhol serverdan ma'lumotlarni tortib olish
+        _ = Task.Run(async () =>
+        {
+            await _syncService.PullAllFromCloudAsync();
+            System.Diagnostics.Debug.WriteLine("☁️ Dastur ochilgandagi pull sync tugadi.");
+        });
+
+        // ✅ Har 2 daqiqada serverdan stockni yangilab turish (2 ta kompyuter uchun)
+        _syncTimer = new System.Threading.Timer(async _ =>
+        {
+            try { await _syncService.PullAllFromCloudAsync(); }
+            catch { /* Ignore sync errors */ }
+        }, null, TimeSpan.FromMinutes(2), TimeSpan.FromMinutes(2));
     }
 
     private async Task LoadShiftAsync()
