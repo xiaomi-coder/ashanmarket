@@ -19,7 +19,7 @@ public class CartItem : BaseViewModel
     public double Quantity
     {
         get => _quantity;
-        set { SetProperty(ref _quantity, value <= 0 ? 1 : value); OnPropertyChanged(nameof(Total)); }
+        set { SetProperty(ref _quantity, value < 0 ? 0 : value); OnPropertyChanged(nameof(Total)); }
     }
 
     private decimal _discount;

@@ -82,6 +82,14 @@ public partial class SalesView : UserControl
         }
     }
 
+    private void Quantity_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (DataContext is SalesViewModel vm)
+        {
+            vm.RecalculateTotals();
+        }
+    }
+
     private void QuickAmount_Click(object sender, RoutedEventArgs e)
     {
         if (sender is Button btn && decimal.TryParse(btn.Tag?.ToString(), out var amount))
@@ -123,6 +131,10 @@ public partial class SalesView : UserControl
     private Point _scrollMousePoint;
     private double _hOff = 1;
     private bool _isDragging = false;
+    private Point _previousMousePoint;
+    private DateTime _lastMouseMoveTime;
+    private double _velocity = 0;
+    private System.Windows.Threading.DispatcherTimer? _inertiaTimer;
 
     private void Categories_PreviewMouseWheel(object sender, MouseWheelEventArgs e)
     {
@@ -137,69 +149,6 @@ public partial class SalesView : UserControl
         }
     }
 
-    protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e)
-    {
-        if (e.OriginalSource is FrameworkElement fe)
-        {
-            var listBox = FindParent<ListBox>(fe);
-            if (listBox != null && listBox.ItemsSource == ((SalesViewModel)DataContext)?.Categories)
-            {
-                _scrollMousePoint = e.GetPosition(listBox);
-                _hOff = GetScrollViewer(listBox)?.HorizontalOffset ?? 0;
-                _isDragging = false;
-            }
-        }
-        base.OnPreviewMouseLeftButtonDown(e);
-    }
-
-    protected override void OnPreviewMouseMove(MouseEventArgs e)
-    {
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            if (e.OriginalSource is FrameworkElement fe)
-            {
-                var listBox = FindParent<ListBox>(fe);
-                if (listBox != null && listBox.ItemsSource == ((SalesViewModel)DataContext)?.Categories)
-                {
-                    var newPoint = e.GetPosition(listBox);
-                    if (!_isDragging && Math.Abs(newPoint.X - _scrollMousePoint.X) > SystemParameters.MinimumHorizontalDragDistance)
-                    {
-                        _isDragging = true;
-                        listBox.CaptureMouse();
-                    }
-
-                    if (_isDragging)
-                    {
-                        var sv = GetScrollViewer(listBox);
-                        if (sv != null)
-                        {
-                            var delta = _scrollMousePoint.X - newPoint.X;
-                            sv.ScrollToHorizontalOffset(_hOff + delta);
-                        }
-                    }
-                }
-            }
-        }
-        base.OnPreviewMouseMove(e);
-    }
-
-    protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e)
-    {
-        if (_isDragging)
-        {
-            if (e.OriginalSource is FrameworkElement fe)
-            {
-                var listBox = FindParent<ListBox>(fe);
-                if (listBox != null)
-                {
-                    _isDragging = false;
-                    listBox.ReleaseMouseCapture();
-                    e.Handled = true; // Prevent click if dragged
-                }
-            }
-        }
-        base.OnPreviewMouseLeftButtonUp(e);
-    }
 
     private ScrollViewer? GetScrollViewer(DependencyObject depObj)
     {

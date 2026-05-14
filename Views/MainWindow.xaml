@@ -5,8 +5,8 @@
         xmlns:vm="clr-namespace:SupermarketPOS.ViewModels"
         xmlns:conv="clr-namespace:SupermarketPOS.Converters"
         Title="SupermarketPOS"
-        MinWidth="1200" MinHeight="720"
-        Width="1400" Height="860"
+        MinWidth="1024" MinHeight="720"
+        Width="1024" Height="768"
         WindowStartupLocation="CenterScreen"
         Background="{StaticResource BrushBgDark}"
         KeyDown="Window_KeyDown">

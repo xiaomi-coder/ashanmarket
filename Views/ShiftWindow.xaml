@@ -1,7 +1,8 @@
 <Window x:Class="SupermarketPOS.Views.ShiftWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Smena Boshqaruvi" Height="350" Width="400"
+        Title="Smena Boshqaruvi" Width="400"
+        SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
         Background="{StaticResource BrushBgDark}"
         ResizeMode="NoResize">

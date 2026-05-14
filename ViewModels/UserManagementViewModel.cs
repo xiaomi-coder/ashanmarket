@@ -87,10 +87,9 @@ public class UserManagementViewModel : BaseViewModel
                 SelectedUser.FullName = FullName.Trim();
                 SelectedUser.Username = Username.Trim();
                 SelectedUser.Role = Role;
-                // Parol o'zgartirilgan bo'lsa
                 if (!string.IsNullOrWhiteSpace(Password))
                 {
-                    SelectedUser.PasswordHash = Password; // Haqiqiy hayotda hashlash kerak (BCrypt)
+                    SelectedUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(Password);
                 }
 
                 await _userRepo.UpdateAsync(SelectedUser);
@@ -101,7 +100,7 @@ public class UserManagementViewModel : BaseViewModel
                 {
                     FullName = FullName.Trim(),
                     Username = Username.Trim(),
-                    PasswordHash = string.IsNullOrWhiteSpace(Password) ? "12345" : Password,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(string.IsNullOrWhiteSpace(Password) ? "12345" : Password),
                     Role = Role,
                     IsActive = true
                 };

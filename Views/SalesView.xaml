@@ -123,6 +123,7 @@
                      Background="Transparent" BorderThickness="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                      ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                     ScrollViewer.PanningMode="HorizontalOnly"
                      PreviewMouseWheel="Categories_PreviewMouseWheel"
                      Margin="0 0 0 16">
                 <ListBox.ItemsPanel>
@@ -277,7 +278,7 @@
                                         <Border Background="#FF1F2437" CornerRadius="4" BorderBrush="#FF2E3460" BorderThickness="1">
                                             <StackPanel Orientation="Horizontal">
                                                 <Button Content="−" Width="20" Height="20" Background="Transparent" BorderThickness="0" Foreground="White" Tag="{Binding}" Click="DecreaseQty_Click"/>
-                                                <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" Width="35" TextAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="12"/>
+                                                <TextBox Text="{Binding Quantity, UpdateSourceTrigger=PropertyChanged}" TextChanged="Quantity_TextChanged" Width="35" TextAlignment="Center" VerticalContentAlignment="Center" Background="Transparent" BorderThickness="0" Foreground="White" FontSize="12"/>
                                                 <Button Content="+" Width="20" Height="20" Background="Transparent" BorderThickness="0" Foreground="White" Tag="{Binding}" Click="IncreaseQty_Click"/>
                                             </StackPanel>
                                         </Border>
@@ -363,7 +364,14 @@
 
         <!-- ═══ 3-USTUN: TO'LOV (210px) ═══════════════════════════════════ -->
         <Border Grid.Column="2" Background="#FF1A1D27" BorderBrush="#FF2E3460" BorderThickness="1" CornerRadius="12" Margin="0 16 16 16" Padding="12">
-            <StackPanel>
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                
+                <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0 0 4 0" Margin="0 0 0 8">
+                    <StackPanel>
                 <!-- Payment Types -->
                 <TextBlock Text="💳 To'lov turi" Foreground="White" FontWeight="Bold" FontSize="12" Margin="0 0 0 8"/>
                 <UniformGrid Columns="2">
@@ -397,10 +405,10 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Grid.RowDefinitions>
-                        <RowDefinition Height="55"/>
-                        <RowDefinition Height="55"/>
-                        <RowDefinition Height="55"/>
-                        <RowDefinition Height="55"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
+                        <RowDefinition Height="45"/>
                     </Grid.RowDefinitions>
                     <!-- Row 1 -->
                     <Button Grid.Row="0" Grid.Column="0" Content="1" Style="{StaticResource NumpadBtn}" Margin="2" Tag="1" Click="Numpad_Click"/>
@@ -432,25 +440,16 @@
                     <TextBlock Grid.Column="1" Text="{Binding Change, StringFormat='{}{0:N0} so\'m'}" Foreground="#FF27AE60" FontSize="18" FontWeight="Bold"/>
                 </Grid>
 
-                <!-- Receipt Options -->
-                <Grid Margin="0 0 0 16">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                    </Grid.ColumnDefinitions>
-                    <Button Grid.Column="0" Content="🧾 Chek" Background="#FF1F2437" Foreground="White" BorderThickness="1" BorderBrush="#FF2E3460" Margin="0 0 4 0" Height="32" FontSize="11">
-                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
-                    </Button>
-                    <Button Grid.Column="1" Content="📱 SMS" Background="#FF1F2437" Foreground="#FF8892B0" BorderThickness="1" BorderBrush="#FF2E3460" Margin="4 0 0 0" Height="32" FontSize="11">
-                        <Button.Resources><Style TargetType="Border"><Setter Property="CornerRadius" Value="4"/></Style></Button.Resources>
-                    </Button>
-                </Grid>
+
 
                 <!-- Status Message -->
                 <TextBlock Text="{Binding StatusMessage}" Foreground="#FFE74C3C" FontSize="11" TextWrapping="Wrap" Margin="0 0 0 8" HorizontalAlignment="Center"/>
 
-                <!-- Complete Button -->
-                <Button Content="✅ SOTUVNI YAKUNLASH (F5)" 
+                    </StackPanel>
+                </ScrollViewer>
+
+                <!-- Complete Button (Sticky at Bottom) -->
+                <Button Grid.Row="1" Content="✅ SOTUVNI YAKUNLASH (F5)" 
                         Background="#FF3D7FFF" Foreground="White" 
                         BorderThickness="0" Height="50" FontSize="12" FontWeight="Bold"
                         Command="{Binding CompleteSaleCommand}">
@@ -460,7 +459,7 @@
                         </Style>
                     </Button.Resources>
                 </Button>
-            </StackPanel>
+            </Grid>
         </Border>
 
         <!-- ═══ RECEIPT OVERLAY ══════════════════════════════════════════ -->
