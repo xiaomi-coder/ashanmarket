@@ -16,19 +16,22 @@ public class ReceiptPrinterService : IReceiptPrinterService
 {
     public void PrintReceipt(Sale sale)
     {
-        // For thermal printer, usually width is about 280-300 pixels (80mm printer)
-        double width = 300;
+        var settings = SettingsManager.Load();
+        
+        // 58mm = ~200px, 80mm = ~280px
+        double width = settings.ReceiptPaperWidth == 58 ? 200 : 280;
 
         var doc = new FlowDocument
         {
-            PagePadding = new Thickness(10),
+            PagePadding = new Thickness(5, 10, 5, 10), // Kichikroq padding yonlaridan
             ColumnWidth = width,
+            PageWidth = width, // VERY IMPORTANT: O'lchamni qat'iy belgilash
             FontFamily = new FontFamily("Consolas"),
-            FontSize = 12
+            FontSize = 11 // Yozuv ozgina kichikroq, sig'ishi uchun
         };
 
         // Header
-        var storeName = SettingsManager.Load().StoreName;
+        var storeName = settings.StoreName;
         var header = new Paragraph(new Run(storeName.Trim().ToUpper()))
         {
             TextAlignment = TextAlignment.Center,

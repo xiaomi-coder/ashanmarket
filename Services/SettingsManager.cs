@@ -12,6 +12,9 @@ public class AppSettings
     public string CloudSlug { get; set; } = "";
     public string CloudUsername { get; set; } = "";
     public string ApiKey { get; set; } = "";
+    
+    // Printer Settings
+    public int ReceiptPaperWidth { get; set; } = 80; // 58 or 80 mm
 }
 
 public static class SettingsManager

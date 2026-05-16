@@ -26,6 +26,11 @@ public class SettingsViewModel : BaseViewModel
     private string _cloudPassword = string.Empty;
     public string CloudPassword { get => _cloudPassword; set => SetProperty(ref _cloudPassword, value); }
 
+    private int _receiptPaperWidth = 80;
+    public int ReceiptPaperWidth { get => _receiptPaperWidth; set => SetProperty(ref _receiptPaperWidth, value); }
+
+    public List<int> AvailablePaperWidths { get; } = new List<int> { 58, 80 };
+
     private bool _isCloudConnected;
     public bool IsCloudConnected { get => _isCloudConnected; set => SetProperty(ref _isCloudConnected, value); }
 
@@ -41,6 +46,7 @@ public class SettingsViewModel : BaseViewModel
         BackendApiUrl = _settings.BackendApiUrl;
         CloudSlug = _settings.CloudSlug;
         CloudUsername = _settings.CloudUsername;
+        ReceiptPaperWidth = _settings.ReceiptPaperWidth == 0 ? 80 : _settings.ReceiptPaperWidth;
         IsCloudConnected = !string.IsNullOrWhiteSpace(_settings.ApiKey);
 
         SaveCommand = new RelayCommand(SaveSettings);
@@ -53,6 +59,7 @@ public class SettingsViewModel : BaseViewModel
         _settings.BackendApiUrl = BackendApiUrl;
         _settings.CloudSlug = CloudSlug;
         _settings.CloudUsername = CloudUsername;
+        _settings.ReceiptPaperWidth = ReceiptPaperWidth;
         // ApiKey is only updated by ConnectCloudAsync
         
         SettingsManager.Save(_settings);
